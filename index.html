@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TG Маркетплейс</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-[#17212b] text-white font-sans antialiased selection:bg-[#5288c1]">
+
+    <!-- Шапка додатка -->
+    <header class="p-4 bg-[#242f3d] sticky top-0 z-50 shadow-md flex justify-between items-center border-b border-[#2b394a]">
+        <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">TG Барахолка</h1>
+        <button onclick="openAddForm()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-md active:scale-95">
+            + Продати
+        </button>
+    </header>
+
+    <!-- Стрічка товарів -->
+    <main class="p-4 grid grid-cols-2 gap-4" id="products-grid">
+        
+        <!-- Картка товару -->
+        <div class="bg-[#242f3d] rounded-xl overflow-hidden shadow-lg border border-[#2b394a] flex flex-col justify-between">
+            <div class="h-40 bg-[#1e2a38] flex flex-col items-center justify-center text-gray-500 p-2 text-center">
+                <span class="text-3xl mb-1">👕</span>
+                <span class="text-[10px] uppercase tracking-wider text-gray-400">Фото товару</span>
+            </div>
+            <div class="p-3 flex flex-col flex-grow justify-between">
+                <div>
+                    <span class="text-[10px] bg-[#2b5278] text-[#64b5f6] px-2 py-0.5 rounded-full font-semibold uppercase">Одяг</span>
+                    <h3 class="font-bold text-sm mt-1.5 truncate">Худі Stone Island</h3>
+                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">Стан 9/10, оригінал. Розмір L.</p>
+                </div>
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-[#2b394a]">
+                    <span class="text-[#81c784] font-bold text-sm">1 500 ₴</span>
+                    <a href="https://t.me/Hzktoyanoyaetoya" target="_blank" class="bg-[#5288c1] hover:bg-[#4272a5] text-xs px-3 py-1.5 rounded-lg text-white font-medium transition-colors active:scale-95">
+                        Купити
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Ініціалізація Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Розгортаємо на весь екран
+
+        function openAddForm() {
+            alert("Форма додавання товарів в процесі підключення!");
+        }
+    </script>
+</body>
+</html>
