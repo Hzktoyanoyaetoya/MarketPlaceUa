@@ -6,8 +6,12 @@
     <title>MarketPlaceUA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- ПІДКЛЮЧЕННЯ FIREBASE (Версія 8 для простоти в одному файлі) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        /* Ховаємо скроллбар для горизонтальних меню, але залишаємо скролл працюючим */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         body { -webkit-tap-highlight-color: transparent; }
@@ -15,10 +19,8 @@
 </head>
 <body class="bg-[#0c0c0c] text-white font-sans antialiased pb-28 selection:bg-blue-500/30">
 
-    <!-- Вкладка 1: ГОЛОВНА (Товари) -->
+    <!-- Вкладка 1: ГОЛОВНА -->
     <div id="main-screen" class="tab-content block">
-        
-        <!-- Хедер -->
         <header class="flex justify-between items-center p-4 sticky top-0 bg-[#0c0c0c]/90 backdrop-blur-md z-40">
             <div class="text-xl font-bold tracking-tight">
                 MarketPlace<span class="text-[#0057b7]">U</span><span class="text-[#ffd700]">A</span>
@@ -27,56 +29,29 @@
                 <button class="text-gray-300 hover:text-white">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
                 </button>
-                <button class="text-gray-300 hover:text-white relative">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-                    <span class="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-blue-500 border-2 border-[#0c0c0c] rounded-full"></span>
-                </button>
-                <div class="w-8 h-8 bg-gray-700 rounded-full overflow-hidden border border-gray-600 flex items-center justify-center text-xs">
-                    👤
-                </div>
+                <div class="w-8 h-8 bg-gray-700 rounded-full overflow-hidden border border-gray-600 flex items-center justify-center text-xs">👤</div>
             </div>
         </header>
 
-        <!-- Категорії (Горизонтальний скролл) -->
+        <!-- Категорії -->
         <div class="flex gap-3 overflow-x-auto px-4 pb-2 pt-2 scrollbar-hide">
-            <button class="px-4 py-2.5 rounded-xl bg-[#17223b] text-[#64b5f6] border border-[#2b5278] flex items-center gap-2 whitespace-nowrap text-sm font-medium transition-transform active:scale-95">
+            <button class="px-4 py-2.5 rounded-xl bg-[#17223b] text-[#64b5f6] border border-[#2b5278] flex items-center gap-2 whitespace-nowrap text-sm font-medium">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
                 Всі категорії
             </button>
-            <button class="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-[#222] text-gray-300 border border-transparent flex items-center gap-2 whitespace-nowrap text-sm transition-transform active:scale-95">👕 Одяг</button>
-            <button class="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-[#222] text-gray-300 border border-transparent flex items-center gap-2 whitespace-nowrap text-sm transition-transform active:scale-95">👟 Взуття</button>
-            <button class="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-[#222] text-gray-300 border border-transparent flex items-center gap-2 whitespace-nowrap text-sm transition-transform active:scale-95">🎒 Аксесуари</button>
-            <button class="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-[#222] text-gray-300 border border-transparent flex items-center gap-2 whitespace-nowrap text-sm transition-transform active:scale-95">📱 Техніка</button>
+            <button class="px-4 py-2.5 rounded-xl bg-[#161616] text-gray-300 text-sm">👕 Одяг</button>
+            <button class="px-4 py-2.5 rounded-xl bg-[#161616] text-gray-300 text-sm">👟 Взуття</button>
+            <button class="px-4 py-2.5 rounded-xl bg-[#161616] text-gray-300 text-sm">🎒 Аксесуари</button>
         </div>
 
-        <!-- Заголовок секції -->
         <div class="flex justify-between items-center px-4 mt-6 mb-4">
             <h2 class="text-lg font-bold text-white">Останні оголошення</h2>
-            <button class="text-xs text-gray-400 hover:text-gray-200">Переглянути всі &gt;</button>
         </div>
 
         <!-- Сітка товарів -->
         <main class="px-4 grid grid-cols-2 gap-3" id="products-grid">
-            <div class="col-span-2 text-center text-gray-500 py-10 text-sm" id="loading-status">
-                Завантаження товарів...
-            </div>
+            <div class="col-span-2 text-center text-gray-500 py-10 text-sm" id="loading-status">Завантаження...</div>
         </main>
-
-        <!-- Банер "Хочеш продати" -->
-        <div class="mx-4 mt-8 mb-6 bg-[#161616] rounded-2xl p-4 flex items-center justify-between border border-[#222]">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center text-xl font-light">
-                    +
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm text-white">Хочеш продати свої речі?</h4>
-                    <p class="text-[11px] text-gray-400 mt-0.5">Додай оголошення за хвилину</p>
-                </div>
-            </div>
-            <button onclick="switchTab('add-screen', null)" class="bg-[#2962ff] hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors active:scale-95">
-                Додати
-            </button>
-        </div>
     </div>
 
     <!-- Вкладка 2: ДОДАТИ ТОВАР -->
@@ -85,267 +60,245 @@
             <h1 class="text-lg font-bold text-center text-white">Нове оголошення</h1>
         </header>
         <main class="p-4 max-w-md mx-auto space-y-5">
-            <!-- Завантаження фото -->
             <div>
-                <label class="block text-xs text-gray-400 mb-2">Фото товару (до 3-х штук)</label>
+                <label class="block text-xs text-gray-400 mb-2">Фото товару (до 3-х)</label>
                 <div class="flex items-center gap-3 flex-wrap" id="photo-uploader-container">
-                    <label id="upload-btn" class="w-20 h-20 bg-[#161616] border border-dashed border-gray-600 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-all active:scale-95">
-                        <span class="text-2xl text-gray-500 mb-1">+</span>
+                    <label id="upload-btn" class="w-20 h-20 bg-[#161616] border border-dashed border-gray-600 rounded-2xl flex items-center justify-center cursor-pointer">
+                        <span class="text-2xl text-gray-500">+</span>
                         <input id="form-photos" type="file" accept="image/*" multiple class="hidden" onchange="handlePhotos(this)">
                     </label>
                 </div>
             </div>
 
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Назва товару</label>
-                    <input id="form-title" type="text" placeholder="Худі Stone Island" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors">
-                </div>
+                <input id="form-title" type="text" placeholder="Назва товару" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm">
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Ціна (₴)</label>
-                        <input id="form-price" type="number" placeholder="1500" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Категорія</label>
-                        <select id="form-category" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors appearance-none">
-                            <option>Одяг</option>
-                            <option>Взуття</option>
-                            <option>Техніка</option>
-                            <option>Аксесуари</option>
-                        </select>
-                    </div>
+                    <input id="form-price" type="number" placeholder="Ціна (₴)" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm">
+                    <select id="form-category" class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm text-gray-400">
+                        <option>Одяг</option>
+                        <option>Взуття</option>
+                        <option>Техніка</option>
+                        <option>Аксесуари</option>
+                    </select>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Опис товару</label>
-                    <textarea id="form-description" rows="4" placeholder="Опишіть стан, розмір, дефекти..." class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"></textarea>
-                </div>
+                <textarea id="form-description" rows="4" placeholder="Опис товару..." class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm resize-none"></textarea>
             </div>
-
-            <button onclick="submitProduct()" class="w-full bg-[#2962ff] hover:bg-blue-600 py-4 rounded-xl font-bold text-sm transition-all active:scale-95 mt-4 shadow-[0_4px_14px_0_rgba(41,98,255,0.39)]">
-                Опублікувати товар
-            </button>
+            <button onclick="submitProduct()" class="w-full bg-[#2962ff] py-4 rounded-xl font-bold text-sm shadow-lg">Опублікувати товар</button>
         </main>
     </div>
 
-    <!-- Внутрішній Чат -->
+    <!-- ВНУТРІШНІЙ РЕАЛтайм ЧАТ -->
     <div id="chat-screen" class="hidden fixed inset-0 bg-[#0c0c0c] z-50 flex flex-col">
         <header class="p-4 bg-[#161616] flex items-center border-b border-[#222]">
-            <button onclick="closeChat()" class="text-gray-400 mr-4 p-1 active:scale-90">
+            <button onclick="closeChat()" class="text-gray-400 mr-4 p-1">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <div>
-                <h2 id="chat-seller-name" class="font-bold text-sm text-white">Чат із продавцем</h2>
+                <h2 id="chat-title" class="font-bold text-sm text-white">Чат</h2>
                 <p id="chat-product-context" class="text-[11px] text-blue-400 truncate"></p>
             </div>
         </header>
-        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col justify-end bg-[#0c0c0c]"></div>
+        <!-- Сюди повідомлення падатимуть миттєво -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col bg-[#0c0c0c]"></div>
         <div class="p-3 bg-[#161616] border-t border-[#222] flex items-center gap-2 pb-6">
-            <input id="message-input" type="text" placeholder="Повідомлення..." class="flex-grow bg-[#222] border border-transparent rounded-full px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
-            <button onclick="sendMessage()" class="bg-[#2962ff] text-white p-2.5 rounded-full flex items-center justify-center active:scale-90">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 ml-1"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            <input id="message-input" type="text" placeholder="Напишіть повідомлення..." class="flex-grow bg-[#222] border border-transparent rounded-full px-4 py-2.5 text-sm text-white focus:outline-none">
+            <button onclick="sendMessage()" class="bg-[#2962ff] text-white p-2.5 rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 ml-0.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
             </button>
         </div>
     </div>
 
-    <!-- НОВА НИЖНЯ НАВІГАЦІЯ (5 КНОПОК) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#222] flex justify-between items-center h-[72px] pb-safe px-4 z-40 rounded-t-2xl">
-        
+    <!-- ТАБ БАР -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#222] flex justify-between items-center h-[72px] px-4 z-40 rounded-t-2xl">
         <button onclick="switchTab('main-screen', this)" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-[#2962ff]">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span class="text-[9px] font-medium">Головна</span>
         </button>
-
-        <button onclick="alert('Категорії в розробці')" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500 hover:text-gray-300">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            <span class="text-[9px] font-medium">Категорії</span>
-        </button>
-
-        <!-- Кнопка ДОДАТИ (Плаваючий дизайн) -->
         <button onclick="switchTab('add-screen', this)" class="nav-btn flex flex-col items-center justify-center w-14 relative group">
-            <div class="absolute -top-6 w-14 h-14 bg-[#2962ff] rounded-full flex items-center justify-center text-white text-3xl shadow-[0_0_20px_rgba(41,98,255,0.4)] group-active:scale-90 transition-transform">
-                +
-            </div>
-            <span class="text-[9px] font-medium text-gray-500 mt-8 group-hover:text-gray-300">Додати</span>
+            <div class="absolute -top-6 w-14 h-14 bg-[#2962ff] rounded-full flex items-center justify-center text-white text-3xl shadow-lg">+</div>
+            <span class="text-[9px] font-medium text-gray-500 mt-8">Додати</span>
         </button>
-
-        <button onclick="alert('Обране в розробці')" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500 hover:text-gray-300">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            <span class="text-[9px] font-medium">Обране</span>
-        </button>
-
-        <button onclick="alert('Повідомлення в розробці')" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500 hover:text-gray-300">
+        <button onclick="alert('У розробці')" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             <span class="text-[9px] font-medium">Чати</span>
         </button>
-
     </nav>
 
     <script>
-        // ⚠️ ВСТАВ СЮДИ СВОЄ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzYb5LQP5TAkTQhDA_qoCbJj3iHa3l12dDcGp0jvIJRgxe5B6KkMMQ3GPiENiIon-YK9w/exec';
+        // ⚠️ ЗАМІНИ ЦЕЙ ОБ'ЄКТ НА СВІЙ КОНФІГ ІЗ КРОКУ 1 ⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyB51A5V-mNy4xI_DBOUHnIOa_b2iqAcI10",
+            authDomain: "marketplaceua-2af8f.firebaseapp.com",
+            databaseURL: "https://marketplaceua-2af8f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "marketplaceua-2af8f",
+            storageBucket: "marketplaceua-2af8f.firebasestorage.appT",
+            messagingSenderId: "910569795556",
+            appId: "1:910569795556:web:cf252a5a9d6e5fb7ace1f1"
+        };
+
+        // Ініціалізація Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0c0c0c');
-        tg.setBackgroundColor('#0c0c0c');
+        tg.ready(); tg.expand();
+        tg.setHeaderColor('#0c0c0c'); tg.setBackgroundColor('#0c0c0c');
+
+        // Отримання поточного користувача з ТГ
+        const currentUser = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id || "User_" + Math.floor(Math.random() * 1000);
 
         let uploadedImagesBase64 = [];
+        let activeChatRef = null;
+        let currentChatId = null;
 
         window.onload = loadProducts;
 
+        // Обробка фотографій
         function handlePhotos(input) {
             const files = Array.from(input.files);
-            if (uploadedImagesBase64.length + files.length > 3) {
-                alert("Максимум 3 фотографії!");
-                return;
-            }
+            if (uploadedImagesBase64.length + files.length > 3) { alert("Максимум 3 фото!"); return; }
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = function (event) {
-                    const img = new Image();
-                    img.src = event.target.result;
+                reader.onload = function (e) {
+                    const img = new Image(); img.src = e.target.result;
                     img.onload = function () {
                         const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height;
-                        if (width > height) { if (width > 400) { height *= 400 / width; width = 400; } } 
-                        else { if (height > 400) { width *= 400 / height; height = 400; } }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        uploadedImagesBase64.push(canvas.toDataURL('image/jpeg', 0.7));
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > 300) { h *= 300 / w; w = 300; } } else { if (h > 300) { w *= 300 / h; h = 300; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        uploadedImagesBase64.push(canvas.toDataURL('image/jpeg', 0.6));
                         renderPreviews();
                     }
                 }
             });
-            input.value = '';
         }
 
         function renderPreviews() {
             const container = document.getElementById('photo-uploader-container');
-            const uploadBtn = document.getElementById('upload-btn');
+            const btn = document.getElementById('upload-btn');
             container.innerHTML = '';
-            uploadedImagesBase64.forEach((base64, index) => {
-                const previewHtml = `
-                    <div class="relative w-20 h-20 bg-[#222] rounded-2xl overflow-hidden border border-[#333]">
-                        <img src="${base64}" class="w-full h-full object-cover">
-                        <button onclick="removePhoto(${index})" class="absolute top-1 right-1 bg-black/60 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold backdrop-blur-sm">×</button>
-                    </div>`;
-                container.insertAdjacentHTML('beforeend', previewHtml);
+            uploadedImagesBase64.forEach((b64, i) => {
+                container.insertAdjacentHTML('beforeend', `<div class="relative w-20 h-20 bg-[#222] rounded-2xl overflow-hidden"><img src="${b64}" class="w-full h-full object-cover"><button onclick="uploadedImagesBase64.splice(${i},1);renderPreviews();" class="absolute top-1 right-1 bg-black/60 text-white w-5 h-5 rounded-full text-xs font-bold">×</button></div>`);
             });
-            if (uploadedImagesBase64.length < 3) container.appendChild(uploadBtn);
+            if (uploadedImagesBase64.length < 3) container.appendChild(btn);
         }
 
-        function removePhoto(index) { uploadedImagesBase64.splice(index, 1); renderPreviews(); }
-
+        // Завантаження товарів з Firebase
         function loadProducts() {
-            fetch(`${API_URL}?action=get`)
-                .then(response => response.json())
-                .then(data => {
-                    const grid = document.getElementById('products-grid');
-                    grid.innerHTML = '';
-                    
-                    if(data.length === 0) {
-                        grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Оголошень поки немає. Стань першим!</div>';
-                        return;
-                    }
+            database.ref('products').on('value', (snapshot) => {
+                const grid = document.getElementById('products-grid');
+                grid.innerHTML = '';
+                const data = snapshot.val();
+                
+                if (!data) {
+                    grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Оголошень немає.</div>';
+                    return;
+                }
 
-                    data.reverse().forEach(item => {
-                        const imageSrc = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#1a1a1a] flex flex-col items-center justify-center text-gray-600"><span class="text-2xl mb-1">📦</span><span class="text-[9px] uppercase">Без фото</span></div>`;
-                        
-                        // Новий преміальний дизайн картки
-                        const card = `
-                            <div class="bg-[#161616] rounded-[20px] overflow-hidden flex flex-col border border-[#222]">
-                                <div class="relative h-40 bg-[#1a1a1a]">
-                                    ${imageSrc}
-                                    <!-- Кнопка сердечка -->
-                                    <button class="absolute top-2 right-2 p-1.5 bg-black/30 rounded-full text-white backdrop-blur-md">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                Object.keys(data).reverse().forEach(key => {
+                    const item = data[key];
+                    // Показуємо тільки схвалені товари (для тесту можна змінити на status === 'pending', щоб бачити відразу)
+                    if (item.status !== 'approved') return;
+
+                    const img = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-gray-600">📦</div>`;
+                    const card = `
+                        <div class="bg-[#161616] rounded-[20px] overflow-hidden flex flex-col border border-[#222]">
+                            <div class="relative h-40 bg-[#1a1a1a]">${img}<span class="absolute bottom-2 left-2 text-[8px] bg-black/60 text-[#64b5f6] px-2 py-1 rounded-lg uppercase font-bold">${item.category}</span></div>
+                            <div class="p-3 flex flex-col flex-grow justify-between">
+                                <h3 class="text-sm font-medium text-gray-200 line-clamp-2 leading-tight">${item.title}</h3>
+                                <div class="flex justify-between items-end mt-3">
+                                    <span class="font-bold text-white text-sm">${item.price} ₴</span>
+                                    <button onclick="openChat('${key}', '${item.title}', '${item.seller}')" class="p-2 bg-[#222] rounded-xl text-white hover:bg-[#333]">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                                     </button>
-                                    <!-- Бейдж категорії -->
-                                    <span class="absolute bottom-2 left-2 text-[8px] bg-black/60 text-[#64b5f6] px-2 py-1 rounded-lg uppercase tracking-wider font-bold backdrop-blur-md">${item.category}</span>
                                 </div>
-                                <div class="p-3 flex flex-col flex-grow justify-between">
-                                    <h3 class="text-sm font-medium text-gray-200 line-clamp-2 leading-tight">${item.title}</h3>
-                                    <div class="flex justify-between items-end mt-3">
-                                        <span class="font-bold text-white text-sm">${item.price} ₴</span>
-                                        <button onclick="openChat('${item.title}', 'Admin')" class="p-2 bg-[#222] hover:bg-[#333] rounded-xl transition-colors">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-white"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>`;
-                        grid.insertAdjacentHTML('beforeend', card);
-                    });
-                })
-                .catch(err => {
-                    document.getElementById('loading-status').innerText = 'Помилка завантаження даних.';
+                            </div>
+                        </div>`;
+                    grid.insertAdjacentHTML('beforeend', card);
                 });
+                if(grid.innerHTML === '') grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Очікують модерації...</div>';
+            });
         }
 
+        // Публікація товару у Firebase
         function submitProduct() {
             const title = document.getElementById('form-title').value.trim();
             const price = document.getElementById('form-price').value.trim();
             const category = document.getElementById('form-category').value;
             const description = document.getElementById('form-description').value.trim();
 
-            if (!title || !price || !description) { alert('Будь ласка, заповніть усі поля!'); return; }
+            if (!title || !price || !description) { alert('Заповніть поля!'); return; }
 
-            const btn = event.target;
-            btn.innerText = 'Відправка...'; btn.disabled = true;
-
-            const payload = { title, price, category, description, photo1: uploadedImagesBase64[0] || '', photo2: uploadedImagesBase64[1] || '', photo3: uploadedImagesBase64[2] || '' };
-
-            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    alert('Успішно! Товар на модерації.');
-                    document.getElementById('form-title').value = ''; document.getElementById('form-price').value = ''; document.getElementById('form-description').value = '';
-                    uploadedImagesBase64 = []; renderPreviews();
-                    switchTab('main-screen', document.querySelectorAll('.nav-btn')[0]);
-                    loadProducts();
-                }
-            })
-            .finally(() => { btn.innerText = 'Опублікувати товар'; btn.disabled = false; });
-        }
-
-        function switchTab(screenId, clickedButton) {
-            document.querySelectorAll('.tab-content').forEach(screen => {
-                screen.classList.add('hidden'); screen.classList.remove('block');
+            database.ref('products').push({
+                title, price, category, description,
+                photo1: uploadedImagesBase64[0] || '',
+                photo2: uploadedImagesBase64[1] || '',
+                photo3: uploadedImagesBase64[2] || '',
+                seller: currentUser,
+                status: 'pending', // Товар спочатку йде на модерацію
+                timestamp: Date.now()
+            }).then(() => {
+                alert('Товар надіслано на модерацію!');
+                document.getElementById('form-title').value = ''; document.getElementById('form-price').value = ''; document.getElementById('form-description').value = '';
+                uploadedImagesBase64 = []; renderPreviews();
+                switchTab('main-screen', document.querySelectorAll('.nav-btn')[0]);
             });
-            document.getElementById(screenId).classList.remove('hidden');
-            document.getElementById(screenId).classList.add('block');
-            
-            if (clickedButton) {
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    if(!btn.querySelector('.absolute')) { // Якщо це не центральна кнопка
-                        btn.classList.remove('text-[#2962ff]'); btn.classList.add('text-gray-500');
-                    }
-                });
-                if(!clickedButton.querySelector('.absolute')) {
-                    clickedButton.classList.remove('text-gray-500'); clickedButton.classList.add('text-[#2962ff]');
-                }
-            }
         }
 
-        let currentSeller = ''; let currentProduct = '';
-        function openChat(productName, sellerUsername) {
-            currentSeller = sellerUsername; currentProduct = productName;
+        // НАЛАШТУВАННЯ ВНУТРІШНЬОГО ЧАТУ В РЕАЛЬНОМУ ЧАСІ
+        function openChat(productKey, productTitle, sellerName) {
+            if (currentUser === sellerName) { alert("Це ваш товар!"); return; }
+
+            // Унікальний ID чату: ID_Покупця + ID_Продавця + ID_Товару
+            currentChatId = `${currentUser}_${sellerName}_${productKey}`;
+            
             document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('chat-product-context').innerText = `Товар: ${productName}`;
-            document.getElementById('chat-seller-name').innerText = `@${sellerUsername}`;
+            document.getElementById('chat-title').innerText = `Продавець: @${sellerName}`;
+            document.getElementById('chat-product-context').innerText = `Товар: ${productTitle}`;
+            
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+
+            // Слухаємо нові повідомлення в цьому чаті у реальному часі
+            activeChatRef = database.ref(`chats/${currentChatId}`);
+            activeChatRef.on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                const isMe = msg.sender === currentUser;
+                
+                const msgHtml = isMe 
+                    ? `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${msg.text}</p></div>`
+                    : `<div class="bg-[#222] text-gray-200 py-2 px-4 rounded-2xl rounded-tl-sm max-w-[75%] self-start shadow-md"><p class="text-sm">${msg.text}</p></div>`;
+                
+                container.insertAdjacentHTML('beforeend', msgHtml);
+                container.scrollTop = container.scrollHeight;
+            });
         }
-        function closeChat() { document.getElementById('chat-screen').classList.add('hidden'); }
+
         function sendMessage() {
             const input = document.getElementById('message-input');
-            const text = input.value.trim(); if (!text) return;
-            const container = document.getElementById('chat-messages');
-            container.insertAdjacentHTML('beforeend', `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${text}</p></div>`);
-            input.value = ''; container.scrollTop = container.scrollHeight;
-            setTimeout(() => { tg.openTelegramLink(`https://t.me/${currentSeller}?text=${encodeURIComponent('Привіт! Я щодо "' + currentProduct + '". ' + text)}`); }, 1000);
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            // Штовхаємо повідомлення в базу даних Firebase
+            database.ref(`chats/${currentChatId}`).push({
+                sender: currentUser,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            input.value = '';
+        }
+
+        function closeChat() {
+            document.getElementById('chat-screen').classList.add('hidden');
+            if (activeChatRef) { activeChatRef.off(); activeChatRef = null; } // Вимикаємо слухача чату
+        }
+
+        function switchTab(screenId, btn) {
+            document.querySelectorAll('.tab-content').forEach(s => { s.classList.add('hidden'); s.classList.remove('block'); });
+            document.getElementById(screenId).classList.remove('hidden'); document.getElementById(screenId).classList.add('block');
         }
     </script>
 </body>
