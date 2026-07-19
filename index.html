@@ -254,7 +254,7 @@
                 photo2: uploadedImagesBase64[1] || '',
                 photo3: uploadedImagesBase64[2] || '',
                 seller: currentUser,
-                status: 'approved', // Ставимо відразу approved для тестів
+                status: 'pending', // Ставимо відразу approved для тестів
                 timestamp: Date.now()
             }).then(() => {
                 alert('Товар успішно додано!');
