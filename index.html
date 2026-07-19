@@ -7,19 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body class="bg-[#17212b] text-white font-sans antialiased selection:bg-[#5288c1]">
+<body class="bg-[#17212b] text-white font-sans antialiased pb-24 selection:bg-[#5288c1]">
 
-    <!-- Головний екран вітрини -->
-    <div id="main-screen">
-        <!-- Шапка додатка -->
-        <header class="p-4 bg-[#242f3d] sticky top-0 z-50 shadow-md flex justify-between items-center border-b border-[#2b394a]">
+    <!-- Вкладка 1: ТОВАРИ (Головний екран) -->
+    <div id="main-screen" class="tab-content">
+        <header class="p-4 bg-[#242f3d] sticky top-0 z-40 shadow-md flex justify-between items-center border-b border-[#2b394a]">
             <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">TG Барахолка</h1>
-            <button onclick="openAddForm()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-md active:scale-95">
-                + Продати
-            </button>
         </header>
 
-        <!-- Стрічка товарів -->
         <main class="p-4 grid grid-cols-2 gap-4">
             <!-- Картка товару -->
             <div class="bg-[#242f3d] rounded-xl overflow-hidden shadow-lg border border-[#2b394a] flex flex-col justify-between">
@@ -44,9 +39,69 @@
         </main>
     </div>
 
-    <!-- Екран Внутрішнього Чату (Спочатку прихований) -->
+    <!-- Вкладка 2: ДОДАТИ ТОВАР (+) -->
+    <div id="add-screen" class="tab-content hidden">
+        <header class="p-4 bg-[#242f3d] border-b border-[#2b394a]">
+            <h1 class="text-xl font-bold text-center text-[#64b5f6]">Нове оголошення</h1>
+        </header>
+        <main class="p-4 max-w-md mx-auto space-y-4">
+            <div>
+                <label class="block text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Назва товару</label>
+                <input type="text" placeholder="Наприклад: Худі Stone Island" class="w-full bg-[#242f3d] border border-[#2b394a] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#5288c1]">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Ціна (₴)</label>
+                    <input type="number" placeholder="1500" class="w-full bg-[#242f3d] border border-[#2b394a] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#5288c1]">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Категорія</label>
+                    <select class="w-full bg-[#242f3d] border border-[#2b394a] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#5288c1]">
+                        <option>Одяг</option>
+                        <option>Взуття</option>
+                        <option>Техніка</option>
+                        <option>Аксесуари</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Опис товару</label>
+                <textarea rows="3" placeholder="Опишіть стан, розмір, дефекти..." class="w-full bg-[#242f3d] border border-[#2b394a] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#5288c1] resize-none"></textarea>
+            </div>
+            <button onclick="alert('Товар відправлено на модерацію!')" class="w-full bg-[#5288c1] hover:bg-[#4272a5] py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-98 mt-2">
+                Опублікувати товар
+            </button>
+        </main>
+    </div>
+
+    <!-- Вкладка 3: ПРОФІЛЬ -->
+    <div id="profile-screen" class="tab-content hidden">
+        <header class="p-4 bg-[#242f3d] border-b border-[#2b394a]">
+            <h1 class="text-xl font-bold text-center text-[#64b5f6]">Мій профіль</h1>
+        </header>
+        <main class="p-6 text-center">
+            <div class="w-24 h-24 bg-[#2b5278] rounded-full flex items-center justify-center mx-auto text-4xl shadow-md border-2 border-[#5288c1] mb-4">
+                👤
+            </div>
+            <h2 id="user-name" class="text-lg font-bold">Користувач Барахолки</h2>
+            <p id="user-username" class="text-sm text-gray-400 mt-1">@username</p>
+            
+            <div class="mt-8 bg-[#242f3d] border border-[#2b394a] rounded-xl p-4 text-left max-w-sm mx-auto">
+                <h3 class="font-bold text-sm text-[#64b5f6] border-b border-[#2b394a] pb-2 mb-2">Статистика</h3>
+                <div class="flex justify-between text-sm py-1">
+                    <span class="text-gray-400">Мої товари:</span>
+                    <span class="font-semibold">1</span>
+                </div>
+                <div class="flex justify-between text-sm py-1">
+                    <span class="text-gray-400">Статус аккаунту:</span>
+                    <span class="text-[#81c784] font-semibold">Активний</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Внутрішній Чат (Оверлей) -->
     <div id="chat-screen" class="hidden fixed inset-0 bg-[#0e1621] z-50 flex flex-col">
-        <!-- Шапка чату -->
         <header class="p-4 bg-[#242f3d] flex items-center border-b border-[#2b394a]">
             <button onclick="closeChat()" class="text-[#64b5f6] mr-4 text-xl font-bold">←</button>
             <div>
@@ -54,79 +109,105 @@
                 <p id="chat-product-context" class="text-[11px] text-[#64b5f6] truncate"></p>
             </div>
         </header>
-
-        <!-- Область повідомлень -->
         <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col justify-end">
-            <!-- Системне повідомлення -->
             <div class="bg-[#182533] text-gray-400 text-xs p-2.5 rounded-lg text-center max-w-xs mx-auto border border-[#2b394a]">
                 Ви починаєте чат щодо товару. Повідомлення будуть доставлені продавцю.
             </div>
         </div>
-
-        <!-- Панель введення тексту -->
         <div class="p-3 bg-[#242f3d] border-t border-[#2b394a] flex items-center gap-2">
             <input id="message-input" type="text" placeholder="Напишіть повідомлення..." class="flex-grow bg-[#17212b] border border-[#2b394a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#5288c1]">
-            <button onclick="sendMessage()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-lg text-sm font-semibold active:scale-95 transition-all">
-                Надіслати
-            </button>
+            <button onclick="sendMessage()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-lg text-sm font-semibold">Надіслати</button>
         </div>
     </div>
+
+    <!-- НИЖНЯ НАВІГАЦІЙНА ПАНЕЛЬ (TAB BAR) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#242f3d] border-t border-[#2b394a] flex justify-around items-center h-16 z-40 px-2 shadow-2xl">
+        <!-- Кнопка Товари -->
+        <button onclick="switchTab('main-screen', this)" class="nav-btn flex flex-col items-center justify-center text-[#64b5f6] w-20 transition-all">
+            <span class="text-xl">🛍️</span>
+            <span class="text-[10px] font-medium mt-0.5">Товари</span>
+        </button>
+
+        <!-- Центральна кнопка ПЛЮС -->
+        <button onclick="switchTab('add-screen', this)" class="nav-btn flex items-center justify-center bg-[#5288c1] hover:bg-[#4272a5] text-white w-12 h-12 rounded-full -mt-5 shadow-lg shadow-[#17212b] transition-transform active:scale-90">
+            <span class="text-2xl font-bold leading-none">+</span>
+        </button>
+
+        <!-- Кнопка Профіль -->
+        <button onclick="switchTab('profile-screen', this)" class="nav-btn flex flex-col items-center justify-center text-gray-400 hover:text-white w-20 transition-all">
+            <span class="text-xl">👤</span>
+            <span class="text-[10px] font-medium mt-0.5">Профіль</span>
+        </button>
+    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
+        // Спроба отримати реальні дані з Telegram
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = `${user.first_name} ${user.last_name || ''}`;
+            document.getElementById('user-username').innerText = user.username ? `@${user.username}` : `id: ${user.id}`;
+        }
+
         let currentSeller = '';
         let currentProduct = '';
 
-        function openAddForm() {
-            alert("Форма додавання товарів в процесі підключення!");
+        // Логіка перемикання екранів
+        function switchTab(screenId, clickedButton) {
+            // Ховаємо всі екрани
+            document.querySelectorAll('.tab-content').forEach(screen => screen.classList.add('hidden'));
+            // Показуємо потрібний екран
+            document.getElementById(screenId).classList.remove('hidden');
+
+            // Скидаємо колір тексту у всіх кнопках навігації крім центрального плюса
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (!btn.classList.contains('bg-[#5288c1]')) {
+                    btn.classList.remove('text-[#64b5f6]');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            // Підсвічуємо активну кнопку (якщо це не плюс)
+            if (clickedButton && !clickedButton.classList.contains('bg-[#5288c1]')) {
+                clickedButton.classList.remove('text-gray-400');
+                clickedButton.classList.add('text-[#64b5f6]');
+            }
         }
 
-        // Функція відкриття чату
+        // Логіка чату
         function openChat(productName, sellerUsername) {
             currentSeller = sellerUsername;
             currentProduct = productName;
-            
-            document.getElementById('main-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             document.getElementById('chat-product-context').innerText = `Товар: ${productName}`;
-            document.getElementById('chat-seller-name').innerText = `@${sellerUsername} (Продавець)`;
+            document.getElementById('chat-seller-name').innerText = `@${sellerUsername}`;
         }
 
-        // Функція закриття чату
         function closeChat() {
             document.getElementById('chat-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
         }
 
-        // Функція відправки повідомлення всередині інтерфейсу
         function sendMessage() {
             const input = document.getElementById('message-input');
             const messageText = input.value.trim();
-            
             if (messageText === '') return;
 
             const messagesContainer = document.getElementById('chat-messages');
-
-            // Створюємо бабл нашого повідомлення (праворуч, синій)
             const msgHtml = `
-                <div class="bg-[#2b5278] text-white p-3 rounded-xl rounded-tr-none max-w-[75%] self-end shadow-md break-words animate-fade-in">
+                <div class="bg-[#2b5278] text-white p-3 rounded-xl rounded-tr-none max-w-[75%] self-end shadow-md break-words">
                     <p class="text-sm">${messageText}</p>
                     <span class="text-[9px] text-[#a6ccf5] block text-right mt-1">Щойно</span>
                 </div>
             `;
-
             messagesContainer.insertAdjacentHTML('beforeend', msgHtml);
-            input.value = ''; // Очищуємо поле
-            
-            // Автоматичний скролл вниз до нового повідомлення
+            input.value = '';
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Створюємо гарний перехід в ТГ з контекстом через 1 секунду, щоб користувач побачив, що повідомлення відправлено
             setTimeout(() => {
-                const encodeText = encodeURIComponent(`Привіт! Я з приводу оголошення "${currentProduct}" в ТГ Барахолці.\n\nМоє питання: ${messageText}`);
+                const encodeText = encodeURIComponent(`Привіт! Я з приводу оголошення "${currentProduct}".\n\n${messageText}`);
                 tg.openTelegramLink(`https://t.me/${currentSeller}?text=${encodeText}`);
             }, 1000);
         }
