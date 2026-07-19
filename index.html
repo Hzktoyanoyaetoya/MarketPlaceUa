@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MarketPlaceUA</title>
+    <!-- Tailwind CSS для стилів -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- ПІДКЛЮЧЕННЯ FIREBASE (Версія 8 для простоти в одному файлі) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -19,7 +17,7 @@
 </head>
 <body class="bg-[#0c0c0c] text-white font-sans antialiased pb-28 selection:bg-blue-500/30">
 
-    <!-- Вкладка 1: ГОЛОВНА -->
+    <!-- ЕКРАН 1: ГОЛОВНА -->
     <div id="main-screen" class="tab-content block">
         <header class="flex justify-between items-center p-4 sticky top-0 bg-[#0c0c0c]/90 backdrop-blur-md z-40">
             <div class="text-xl font-bold tracking-tight">
@@ -54,7 +52,7 @@
         </main>
     </div>
 
-    <!-- Вкладка 2: ДОДАТИ ТОВАР -->
+    <!-- ЕКРАН 2: ДОДАТИ ТОВАР -->
     <div id="add-screen" class="tab-content hidden">
         <header class="p-4 bg-[#0c0c0c] border-b border-[#222] sticky top-0 z-40">
             <h1 class="text-lg font-bold text-center text-white">Нове оголошення</h1>
@@ -65,7 +63,7 @@
                 <div class="flex items-center gap-3 flex-wrap" id="photo-uploader-container">
                     <label id="upload-btn" class="w-20 h-20 bg-[#161616] border border-dashed border-gray-600 rounded-2xl flex items-center justify-center cursor-pointer">
                         <span class="text-2xl text-gray-500">+</span>
-                        <input id="form-photos" type="file" accept="image/*" multiple class="hidden" onchange="handlePhotos(this)">
+                        <input id="form-photos" type="file" accept="image/*" multiple class="hidden">
                     </label>
                 </div>
             </div>
@@ -83,14 +81,14 @@
                 </div>
                 <textarea id="form-description" rows="4" placeholder="Опис товару..." class="w-full bg-[#161616] border border-[#222] rounded-xl px-4 py-3.5 text-sm resize-none"></textarea>
             </div>
-            <button onclick="submitProduct()" class="w-full bg-[#2962ff] py-4 rounded-xl font-bold text-sm shadow-lg">Опублікувати товар</button>
+            <button id="btn-submit" class="w-full bg-[#2962ff] py-4 rounded-xl font-bold text-sm shadow-lg">Опублікувати товар</button>
         </main>
     </div>
 
-    <!-- ВНУТРІШНІЙ РЕАЛтайм ЧАТ -->
+    <!-- ЕКРАН 3: РЕАЛТАЙМ ЧАТ -->
     <div id="chat-screen" class="hidden fixed inset-0 bg-[#0c0c0c] z-50 flex flex-col">
         <header class="p-4 bg-[#161616] flex items-center border-b border-[#222]">
-            <button onclick="closeChat()" class="text-gray-400 mr-4 p-1">
+            <button id="btn-close-chat" class="text-gray-400 mr-4 p-1">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <div>
@@ -98,11 +96,10 @@
                 <p id="chat-product-context" class="text-[11px] text-blue-400 truncate"></p>
             </div>
         </header>
-        <!-- Сюди повідомлення падатимуть миттєво -->
         <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col bg-[#0c0c0c]"></div>
         <div class="p-3 bg-[#161616] border-t border-[#222] flex items-center gap-2 pb-6">
             <input id="message-input" type="text" placeholder="Напишіть повідомлення..." class="flex-grow bg-[#222] border border-transparent rounded-full px-4 py-2.5 text-sm text-white focus:outline-none">
-            <button onclick="sendMessage()" class="bg-[#2962ff] text-white p-2.5 rounded-full flex items-center justify-center">
+            <button id="btn-send-message" class="bg-[#2962ff] text-white p-2.5 rounded-full flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 ml-0.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
             </button>
         </div>
@@ -110,50 +107,67 @@
 
     <!-- ТАБ БАР -->
     <nav class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#222] flex justify-between items-center h-[72px] px-4 z-40 rounded-t-2xl">
-        <button onclick="switchTab('main-screen', this)" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-[#2962ff]">
+        <button id="tab-main" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-[#2962ff]">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span class="text-[9px] font-medium">Головна</span>
         </button>
-        <button onclick="switchTab('add-screen', this)" class="nav-btn flex flex-col items-center justify-center w-14 relative group">
+        <button id="tab-add" class="nav-btn flex flex-col items-center justify-center w-14 relative group">
             <div class="absolute -top-6 w-14 h-14 bg-[#2962ff] rounded-full flex items-center justify-center text-white text-3xl shadow-lg">+</div>
             <span class="text-[9px] font-medium text-gray-500 mt-8">Додати</span>
         </button>
-        <button onclick="alert('У розробці')" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500">
+        <button id="tab-chats-list" class="nav-btn flex flex-col items-center justify-center w-14 gap-1 text-gray-500">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             <span class="text-[9px] font-medium">Чати</span>
         </button>
     </nav>
 
-    <script>
-        // ⚠️ ЗАМІНИ ЦЕЙ ОБ'ЄКТ НА СВІЙ КОНФІГ ІЗ КРОКУ 1 ⚠️
+    <!-- СКРИПТИ ДЛЯ FIREBASE (MODERN MODULES) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ТВОЯ КОНФІГУРАЦІЯ (ВЖЕ З ДАНИМИ З КРОКУ 2)
         const firebaseConfig = {
             apiKey: "AIzaSyB51A5V-mNy4xI_DBOUHnIOa_b2iqAcI10",
             authDomain: "marketplaceua-2af8f.firebaseapp.com",
             databaseURL: "https://marketplaceua-2af8f-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "marketplaceua-2af8f",
-            storageBucket: "marketplaceua-2af8f.firebasestorage.appT",
+            storageBucket: "marketplaceua-2af8f.firebasestorage.app",
             messagingSenderId: "910569795556",
             appId: "1:910569795556:web:cf252a5a9d6e5fb7ace1f1"
         };
 
-        // Ініціалізація Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // Ініціалізуємо Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
+        // Telegram Ініціалізація
         const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
-        tg.setHeaderColor('#0c0c0c'); tg.setBackgroundColor('#0c0c0c');
+        if(tg) {
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('#0c0c0c');
+            tg.setBackgroundColor('#0c0c0c');
+        }
 
-        // Отримання поточного користувача з ТГ
-        const currentUser = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id || "User_" + Math.floor(Math.random() * 1000);
+        const currentUser = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.id || "Користувач_" + Math.floor(Math.random() * 1000);
 
         let uploadedImagesBase64 = [];
-        let activeChatRef = null;
         let currentChatId = null;
+        let activeChatRef = null;
 
-        window.onload = loadProducts;
+        // ПРИВ'ЯЗКА ПОДІЙ ДО КНОПОК
+        document.getElementById('tab-main').onclick = () => switchTab('main-screen', document.getElementById('tab-main'));
+        document.getElementById('tab-add').onclick = () => switchTab('add-screen', document.getElementById('tab-add'));
+        document.getElementById('tab-chats-list').onclick = () => alert('Ця вкладка у розробці. Перейдіть до товару, щоб написати продавцю!');
+        document.getElementById('form-photos').onchange = (e) => handlePhotos(e.target);
+        document.getElementById('btn-submit').onclick = submitProduct;
+        document.getElementById('btn-close-chat').onclick = closeChat;
+        document.getElementById('btn-send-message').onclick = sendMessage;
 
-        // Обробка фотографій
+        // Завантаження товарів при старті
+        loadProducts();
+
         function handlePhotos(input) {
             const files = Array.from(input.files);
             if (uploadedImagesBase64.length + files.length > 3) { alert("Максимум 3 фото!"); return; }
@@ -180,29 +194,31 @@
             const btn = document.getElementById('upload-btn');
             container.innerHTML = '';
             uploadedImagesBase64.forEach((b64, i) => {
-                container.insertAdjacentHTML('beforeend', `<div class="relative w-20 h-20 bg-[#222] rounded-2xl overflow-hidden"><img src="${b64}" class="w-full h-full object-cover"><button onclick="uploadedImagesBase64.splice(${i},1);renderPreviews();" class="absolute top-1 right-1 bg-black/60 text-white w-5 h-5 rounded-full text-xs font-bold">×</button></div>`);
+                container.insertAdjacentHTML('beforeend', `<div class="relative w-20 h-20 bg-[#222] rounded-2xl overflow-hidden"><img src="${b64}" class="w-full h-full object-cover"><button type="button" id="rm-img-${i}" class="absolute top-1 right-1 bg-black/60 text-white w-5 h-5 rounded-full text-xs font-bold">×</button></div>`);
+                document.getElementById(`rm-img-${i}`).onclick = () => { uploadedImagesBase64.splice(i,1); renderPreviews(); };
             });
             if (uploadedImagesBase64.length < 3) container.appendChild(btn);
         }
 
-        // Завантаження товарів з Firebase
         function loadProducts() {
-            database.ref('products').on('value', (snapshot) => {
+            const productsRef = ref(db, 'products');
+            onValue(productsRef, (snapshot) => {
                 const grid = document.getElementById('products-grid');
                 grid.innerHTML = '';
                 const data = snapshot.val();
                 
                 if (!data) {
-                    grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Оголошень немає.</div>';
+                    grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Оголошень немає. Додайте першим!</div>';
                     return;
                 }
 
                 Object.keys(data).reverse().forEach(key => {
                     const item = data[key];
-                    // Показуємо тільки схвалені товари (для тесту можна змінити на status === 'pending', щоб бачити відразу)
-                    if (item.status !== 'approved') return;
-
+                    
+                    // ТИМЧАСОВО: Показуємо всі товари ('pending' і 'approved'), щоб ви відразу бачили результат без модерації!
                     const img = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-gray-600">📦</div>`;
+                    
+                    const cardId = `btn-chat-trigger-${key}`;
                     const card = `
                         <div class="bg-[#161616] rounded-[20px] overflow-hidden flex flex-col border border-[#222]">
                             <div class="relative h-40 bg-[#1a1a1a]">${img}<span class="absolute bottom-2 left-2 text-[8px] bg-black/60 text-[#64b5f6] px-2 py-1 rounded-lg uppercase font-bold">${item.category}</span></div>
@@ -210,48 +226,50 @@
                                 <h3 class="text-sm font-medium text-gray-200 line-clamp-2 leading-tight">${item.title}</h3>
                                 <div class="flex justify-between items-end mt-3">
                                     <span class="font-bold text-white text-sm">${item.price} ₴</span>
-                                    <button onclick="openChat('${key}', '${item.title}', '${item.seller}')" class="p-2 bg-[#222] rounded-xl text-white hover:bg-[#333]">
+                                    <button id="${cardId}" class="p-2 bg-[#222] rounded-xl text-white hover:bg-[#333]">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                                     </button>
                                 </div>
                             </div>
                         </div>`;
                     grid.insertAdjacentHTML('beforeend', card);
+                    
+                    document.getElementById(cardId).onclick = () => openChat(key, item.title, item.seller);
                 });
-                if(grid.innerHTML === '') grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-10 text-sm">Очікують модерації...</div>';
             });
         }
 
-        // Публікація товару у Firebase
         function submitProduct() {
             const title = document.getElementById('form-title').value.trim();
             const price = document.getElementById('form-price').value.trim();
             const category = document.getElementById('form-category').value;
             const description = document.getElementById('form-description').value.trim();
 
-            if (!title || !price || !description) { alert('Заповніть поля!'); return; }
+            if (!title || !price || !description) { alert('Будь ласка, заповніть усі поля!'); return; }
 
-            database.ref('products').push({
+            const productsRef = ref(db, 'products');
+            push(productsRef, {
                 title, price, category, description,
                 photo1: uploadedImagesBase64[0] || '',
                 photo2: uploadedImagesBase64[1] || '',
                 photo3: uploadedImagesBase64[2] || '',
                 seller: currentUser,
-                status: 'pending', // Товар спочатку йде на модерацію
+                status: 'approved', // Ставимо відразу approved для тестів
                 timestamp: Date.now()
             }).then(() => {
-                alert('Товар надіслано на модерацію!');
-                document.getElementById('form-title').value = ''; document.getElementById('form-price').value = ''; document.getElementById('form-description').value = '';
-                uploadedImagesBase64 = []; renderPreviews();
-                switchTab('main-screen', document.querySelectorAll('.nav-btn')[0]);
-            });
+                alert('Товар успішно додано!');
+                document.getElementById('form-title').value = ''; 
+                document.getElementById('form-price').value = ''; 
+                document.getElementById('form-description').value = '';
+                uploadedImagesBase64 = []; 
+                renderPreviews();
+                switchTab('main-screen', document.getElementById('tab-main'));
+            }).catch(err => alert("Помилка запису: " + err));
         }
 
-        // НАЛАШТУВАННЯ ВНУТРІШНЬОГО ЧАТУ В РЕАЛЬНОМУ ЧАСІ
         function openChat(productKey, productTitle, sellerName) {
-            if (currentUser === sellerName) { alert("Це ваш товар!"); return; }
+            if (currentUser === sellerName) { alert("Це ваш власний товар!"); return; }
 
-            // Унікальний ID чату: ID_Покупця + ID_Продавця + ID_Товару
             currentChatId = `${currentUser}_${sellerName}_${productKey}`;
             
             document.getElementById('chat-screen').classList.remove('hidden');
@@ -261,18 +279,21 @@
             const container = document.getElementById('chat-messages');
             container.innerHTML = '';
 
-            // Слухаємо нові повідомлення в цьому чаті у реальному часі
-            activeChatRef = database.ref(`chats/${currentChatId}`);
-            activeChatRef.on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                const isMe = msg.sender === currentUser;
-                
-                const msgHtml = isMe 
-                    ? `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${msg.text}</p></div>`
-                    : `<div class="bg-[#222] text-gray-200 py-2 px-4 rounded-2xl rounded-tl-sm max-w-[75%] self-start shadow-md"><p class="text-sm">${msg.text}</p></div>`;
-                
-                container.insertAdjacentHTML('beforeend', msgHtml);
-                container.scrollTop = container.scrollHeight;
+            activeChatRef = ref(db, `chats/${currentChatId}`);
+            onValue(activeChatRef, (snapshot) => {
+                container.innerHTML = '';
+                const data = snapshot.val();
+                if(data) {
+                    Object.keys(data).forEach(k => {
+                        const msg = data[k];
+                        const isMe = msg.sender === currentUser;
+                        const msgHtml = isMe 
+                            ? `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${msg.text}</p></div>`
+                            : `<div class="bg-[#222] text-gray-200 py-2 px-4 rounded-2xl rounded-tl-sm max-w-[75%] self-start shadow-md"><p class="text-sm">${msg.text}</p></div>`;
+                        container.insertAdjacentHTML('beforeend', msgHtml);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                }
             });
         }
 
@@ -281,24 +302,26 @@
             const text = input.value.trim();
             if (!text || !currentChatId) return;
 
-            // Штовхаємо повідомлення в базу даних Firebase
-            database.ref(`chats/${currentChatId}`).push({
+            const chatRef = ref(db, `chats/${currentChatId}`);
+            push(chatRef, {
                 sender: currentUser,
                 text: text,
                 timestamp: Date.now()
             });
-
             input.value = '';
         }
 
         function closeChat() {
             document.getElementById('chat-screen').classList.add('hidden');
-            if (activeChatRef) { activeChatRef.off(); activeChatRef = null; } // Вимикаємо слухача чату
+            if (activeChatRef) { off(activeChatRef); activeChatRef = null; }
         }
 
         function switchTab(screenId, btn) {
             document.querySelectorAll('.tab-content').forEach(s => { s.classList.add('hidden'); s.classList.remove('block'); });
             document.getElementById(screenId).classList.remove('hidden'); document.getElementById(screenId).classList.add('block');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-[#2962ff]'); b.classList.add('text-gray-500'); });
+            if(btn) { btn.classList.remove('text-gray-500'); btn.classList.add('text-[#2962ff]'); }
         }
     </script>
 </body>
