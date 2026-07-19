@@ -9,48 +9,126 @@
 </head>
 <body class="bg-[#17212b] text-white font-sans antialiased selection:bg-[#5288c1]">
 
-    <!-- Шапка додатка -->
-    <header class="p-4 bg-[#242f3d] sticky top-0 z-50 shadow-md flex justify-between items-center border-b border-[#2b394a]">
-        <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">TG Барахолка</h1>
-        <button onclick="openAddForm()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-md active:scale-95">
-            + Продати
-        </button>
-    </header>
+    <!-- Головний екран вітрини -->
+    <div id="main-screen">
+        <!-- Шапка додатка -->
+        <header class="p-4 bg-[#242f3d] sticky top-0 z-50 shadow-md flex justify-between items-center border-b border-[#2b394a]">
+            <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">TG Барахолка</h1>
+            <button onclick="openAddForm()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-md active:scale-95">
+                + Продати
+            </button>
+        </header>
 
-    <!-- Стрічка товарів -->
-    <main class="p-4 grid grid-cols-2 gap-4" id="products-grid">
-        
-        <!-- Картка товару -->
-        <div class="bg-[#242f3d] rounded-xl overflow-hidden shadow-lg border border-[#2b394a] flex flex-col justify-between">
-            <div class="h-40 bg-[#1e2a38] flex flex-col items-center justify-center text-gray-500 p-2 text-center">
-                <span class="text-3xl mb-1">👕</span>
-                <span class="text-[10px] uppercase tracking-wider text-gray-400">Фото товару</span>
+        <!-- Стрічка товарів -->
+        <main class="p-4 grid grid-cols-2 gap-4">
+            <!-- Картка товару -->
+            <div class="bg-[#242f3d] rounded-xl overflow-hidden shadow-lg border border-[#2b394a] flex flex-col justify-between">
+                <div class="h-40 bg-[#1e2a38] flex flex-col items-center justify-center text-gray-500 p-2 text-center">
+                    <span class="text-3xl mb-1">👕</span>
+                    <span class="text-[10px] uppercase tracking-wider text-gray-400">Фото товару</span>
+                </div>
+                <div class="p-3 flex flex-col flex-grow justify-between">
+                    <div>
+                        <span class="text-[10px] bg-[#2b5278] text-[#64b5f6] px-2 py-0.5 rounded-full font-semibold uppercase">Одяг</span>
+                        <h3 class="font-bold text-sm mt-1.5 truncate">Худі Stone Island</h3>
+                        <p class="text-xs text-gray-400 mt-1 line-clamp-2">Стан 9/10, оригінал. Розмір L.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 pt-2 border-t border-[#2b394a]">
+                        <span class="text-[#81c784] font-bold text-sm">1 500 ₴</span>
+                        <button onclick="openChat('Худі Stone Island', 'Hzktoyanoyaetoya')" class="bg-[#5288c1] hover:bg-[#4272a5] text-xs px-3 py-1.5 rounded-lg text-white font-medium transition-colors active:scale-95">
+                            Купити
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="p-3 flex flex-col flex-grow justify-between">
-                <div>
-                    <span class="text-[10px] bg-[#2b5278] text-[#64b5f6] px-2 py-0.5 rounded-full font-semibold uppercase">Одяг</span>
-                    <h3 class="font-bold text-sm mt-1.5 truncate">Худі Stone Island</h3>
-                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">Стан 9/10, оригінал. Розмір L.</p>
-                </div>
-                <div class="flex justify-between items-center mt-4 pt-2 border-t border-[#2b394a]">
-                    <span class="text-[#81c784] font-bold text-sm">1 500 ₴</span>
-                    <a href="https://t.me/Hzktoyanoyaetoya" target="_blank" class="bg-[#5288c1] hover:bg-[#4272a5] text-xs px-3 py-1.5 rounded-lg text-white font-medium transition-colors active:scale-95">
-                        Купити
-                    </a>
-                </div>
+        </main>
+    </div>
+
+    <!-- Екран Внутрішнього Чату (Спочатку прихований) -->
+    <div id="chat-screen" class="hidden fixed inset-0 bg-[#0e1621] z-50 flex flex-col">
+        <!-- Шапка чату -->
+        <header class="p-4 bg-[#242f3d] flex items-center border-b border-[#2b394a]">
+            <button onclick="closeChat()" class="text-[#64b5f6] mr-4 text-xl font-bold">←</button>
+            <div>
+                <h2 id="chat-seller-name" class="font-bold text-sm text-white">Чат із продавцем</h2>
+                <p id="chat-product-context" class="text-[11px] text-[#64b5f6] truncate"></p>
+            </div>
+        </header>
+
+        <!-- Область повідомлень -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col justify-end">
+            <!-- Системне повідомлення -->
+            <div class="bg-[#182533] text-gray-400 text-xs p-2.5 rounded-lg text-center max-w-xs mx-auto border border-[#2b394a]">
+                Ви починаєте чат щодо товару. Повідомлення будуть доставлені продавцю.
             </div>
         </div>
 
-    </main>
+        <!-- Панель введення тексту -->
+        <div class="p-3 bg-[#242f3d] border-t border-[#2b394a] flex items-center gap-2">
+            <input id="message-input" type="text" placeholder="Напишіть повідомлення..." class="flex-grow bg-[#17212b] border border-[#2b394a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#5288c1]">
+            <button onclick="sendMessage()" class="bg-[#5288c1] hover:bg-[#4272a5] text-white px-4 py-2 rounded-lg text-sm font-semibold active:scale-95 transition-all">
+                Надіслати
+            </button>
+        </div>
+    </div>
 
     <script>
-        // Ініціалізація Telegram Web App
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand(); // Розгортаємо на весь екран
+        tg.expand();
+
+        let currentSeller = '';
+        let currentProduct = '';
 
         function openAddForm() {
             alert("Форма додавання товарів в процесі підключення!");
+        }
+
+        // Функція відкриття чату
+        function openChat(productName, sellerUsername) {
+            currentSeller = sellerUsername;
+            currentProduct = productName;
+            
+            document.getElementById('main-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('chat-product-context').innerText = `Товар: ${productName}`;
+            document.getElementById('chat-seller-name').innerText = `@${sellerUsername} (Продавець)`;
+        }
+
+        // Функція закриття чату
+        function closeChat() {
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+        }
+
+        // Функція відправки повідомлення всередині інтерфейсу
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const messageText = input.value.trim();
+            
+            if (messageText === '') return;
+
+            const messagesContainer = document.getElementById('chat-messages');
+
+            // Створюємо бабл нашого повідомлення (праворуч, синій)
+            const msgHtml = `
+                <div class="bg-[#2b5278] text-white p-3 rounded-xl rounded-tr-none max-w-[75%] self-end shadow-md break-words animate-fade-in">
+                    <p class="text-sm">${messageText}</p>
+                    <span class="text-[9px] text-[#a6ccf5] block text-right mt-1">Щойно</span>
+                </div>
+            `;
+
+            messagesContainer.insertAdjacentHTML('beforeend', msgHtml);
+            input.value = ''; // Очищуємо поле
+            
+            // Автоматичний скролл вниз до нового повідомлення
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Створюємо гарний перехід в ТГ з контекстом через 1 секунду, щоб користувач побачив, що повідомлення відправлено
+            setTimeout(() => {
+                const encodeText = encodeURIComponent(`Привіт! Я з приводу оголошення "${currentProduct}" в ТГ Барахолці.\n\nМоє питання: ${messageText}`);
+                tg.openTelegramLink(`https://t.me/${currentSeller}?text=${encodeText}`);
+            }, 1000);
         }
     </script>
 </body>
