@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TG Маркетплейс</title>
+    <title>MarketPlaceUa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -12,9 +12,8 @@
     <!-- Вкладка 1: ТОВАРИ -->
     <div id="main-screen" class="tab-content">
         <header class="p-4 bg-[#242f3d] sticky top-0 z-40 shadow-md flex justify-between items-center border-b border-[#2b394a]">
-            <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">TG Барахолка</h1>
+            <h1 class="text-xl font-bold tracking-wide text-[#64b5f6]">MarketPlaceUa</h1>
         </header>
-        <!-- Сюди товари підвантажуватимуться автоматично -->
         <main class="p-4 grid grid-cols-2 gap-4" id="products-grid">
             <div class="col-span-2 text-center text-gray-400 py-10" id="loading-status">Завантаження товарів...</div>
         </main>
@@ -26,6 +25,19 @@
             <h1 class="text-xl font-bold text-center text-[#64b5f6]">Нове оголошення</h1>
         </header>
         <main class="p-4 max-w-md mx-auto space-y-4">
+            <!-- Завантаження фото -->
+            <div>
+                <label class="block text-xs text-gray-400 font-semibold mb-2 uppercase tracking-wider">Фото товару (до 3-х штук)</label>
+                <div class="flex items-center gap-3 flex-wrap" id="photo-uploader-container">
+                    <!-- Прев'ю з'являтимуться тут -->
+                    <label id="upload-btn" class="w-20 h-20 bg-[#242f3d] border-2 border-dashed border-[#2b394a] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#5288c1] transition-all active:scale-95">
+                        <span class="text-2xl text-gray-400">+</span>
+                        <span class="text-[9px] text-gray-400 mt-0.5">Додати</span>
+                        <input id="form-photos" type="file" accept="image/*" multiple class="hidden" onchange="handlePhotos(this)">
+                    </label>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Назва товару</label>
                 <input id="form-title" type="text" placeholder="Наприклад: Худі Stone Island" class="w-full bg-[#242f3d] border border-[#2b394a] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#5288c1]">
@@ -97,12 +109,14 @@
     </nav>
 
     <script>
-        // ⚠️ ВСТАВ СЮДИ СВОЄ ПОСИЛАННЯ З GOOGLE APPS SCRIPT (ЯКЕ ЗАКІНЧУЄТЬСЯ НА /exec)
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzJhFc4snNhLeTqeZOI7kamydoDTfJEzp_jVpiETHjJBi-kVsL6zsYX2XgF8ZqZPLsA2Q/exec';
+        // ⚠️ ВСТАВ СЮДИ СВОЄ НОВЕ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx8z-2kObVbPp4_uuo6XCfvbvxHlkQQYTMiUwenk3A2SrenjLuhhXwXEMbcaCXSLZyf3Q/exec';
 
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+
+        let uploadedImagesBase64 = []; // Масив для збереження фото в форматі тексту
 
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             const user = tg.initDataUnsafe.user;
@@ -110,15 +124,84 @@
             document.getElementById('user-username').innerText = user.username ? `@${user.username}` : `id: ${user.id}`;
         }
 
-        // Автозавантаження товарів при старті
         window.onload = loadProducts;
+
+        // Обробка та стискання фотографій
+        function handlePhotos(input) {
+            const files = Array.from(input.files);
+            
+            if (uploadedImagesBase64.length + files.length > 3) {
+                alert("Максимум можна завантажити 3 фотографії!");
+                return;
+            }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function () {
+                        // Стискаємо фото за допомогою Canvas, щоб не перевантажувати таблицю
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Отримуємо оптимізований Base64 рядок
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        uploadedImagesBase64.push(compressedBase64);
+                        
+                        renderPreviews();
+                    }
+                }
+            });
+            input.value = ''; // Скидаємо інпут
+        }
+
+        function renderPreviews() {
+            // Видаляємо старі прев'ю, залишаємо тільки кнопку додавання
+            const container = document.getElementById('photo-uploader-container');
+            const uploadBtn = document.getElementById('upload-btn');
+            container.innerHTML = '';
+            
+            uploadedImagesBase64.forEach((base64, index) => {
+                const previewHtml = `
+                    <div class="relative w-20 h-20 bg-[#1e2a38] rounded-xl overflow-hidden border border-[#2b394a]">
+                        <img src="${base64}" class="w-full h-full object-cover">
+                        <button onclick="removePhoto(${index})" class="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-md">×</button>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', previewHtml);
+            });
+
+            if (uploadedImagesBase64.length < 3) {
+                container.appendChild(uploadBtn);
+            }
+        }
+
+        function removePhoto(index) {
+            uploadedImagesBase64.splice(index, 1);
+            renderPreviews();
+        }
 
         function loadProducts() {
             fetch(`${API_URL}?action=get`)
                 .then(response => response.json())
                 .then(data => {
                     const grid = document.getElementById('products-grid');
-                    grid.innerHTML = ''; // Очищуємо заглушку
+                    grid.innerHTML = '';
                     
                     if(data.length === 0) {
                         grid.innerHTML = '<div class="col-span-2 text-center text-gray-400 py-10">Поки немає схвалених товарів.</div>';
@@ -126,11 +209,13 @@
                     }
 
                     data.forEach(item => {
+                        // Перевіряємо, чи є перша фотографія, інакше ставимо стандартну коробку
+                        const imageSrc = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<span class="text-3xl mb-1">📦</span><span class="text-[10px] uppercase tracking-wider text-gray-400">Немає фото</span>`;
+                        
                         const card = `
                             <div class="bg-[#242f3d] rounded-xl overflow-hidden shadow-lg border border-[#2b394a] flex flex-col justify-between">
-                                <div class="h-40 bg-[#1e2a38] flex flex-col items-center justify-center text-gray-500 p-2 text-center">
-                                    <span class="text-3xl mb-1">📦</span>
-                                    <span class="text-[10px] uppercase tracking-wider text-gray-400">Фото</span>
+                                <div class="h-40 bg-[#1e2a38] flex flex-col items-center justify-center text-gray-500 overflow-hidden">
+                                    ${imageSrc}
                                 </div>
                                 <div class="p-3 flex flex-col flex-grow justify-between">
                                     <div>
@@ -163,24 +248,38 @@
                 return;
             }
 
-            alert('Надсилаємо товар на модерацію...');
+            alert('Надсилаємо товар та фото на модерацію...');
 
-            const url = `${API_URL}?action=add&title=${encodeURIComponent(title)}&price=${encodeURIComponent(price)}&category=${encodeURIComponent(category)}&description=${encodeURIComponent(description)}`;
+            const payload = {
+                title: title,
+                price: price,
+                category: category,
+                description: description,
+                photo1: uploadedImagesBase64[0] || '',
+                photo2: uploadedImagesBase64[1] || '',
+                photo3: uploadedImagesBase64[2] || ''
+            };
 
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status === 'success') {
-                        alert('Успішно! Товар надіслано адміну. Він з`явиться на вітрині після схвалення.');
-                        // Очищення форми
-                        document.getElementById('form-title').value = '';
-                        document.getElementById('form-price').value = '';
-                        document.getElementById('form-description').value = '';
-                        switchTab('main-screen');
-                        loadProducts();
-                    }
-                })
-                .catch(err => alert('Помилка при відправці. Перевірте URL скрипта.'));
+            // Відправляємо методом POST у вигляді простого тексту, щоб уникнути блокування CORS
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert('Успішно! Товар надіслано адміну. Він з`явиться на вітрині після схвалення.');
+                    document.getElementById('form-title').value = '';
+                    document.getElementById('form-price').value = '';
+                    document.getElementById('form-description').value = '';
+                    uploadedImagesBase64 = [];
+                    renderPreviews();
+                    switchTab('main-screen');
+                    loadProducts();
+                }
+            })
+            .catch(err => alert('Помилка при відправці. Перевірте нове URL посилання скрипта.'));
         }
 
         function switchTab(screenId, clickedButton) {
