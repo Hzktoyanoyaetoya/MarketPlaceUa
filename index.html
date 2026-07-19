@@ -214,6 +214,7 @@
 
                 Object.keys(data).reverse().forEach(key => {
                     const item = data[key];
+                    if (item.status !== 'approved') return;
                     
                     // ТИМЧАСОВО: Показуємо всі товари ('pending' і 'approved'), щоб ви відразу бачили результат без модерації!
                     const img = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-gray-600">📦</div>`;
