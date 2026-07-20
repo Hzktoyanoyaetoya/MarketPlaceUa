@@ -27,13 +27,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
             </button>
-            <button id="btn-admin-panel" class="w-9 h-9 rounded-full bg-[#1b2234] border border-[#2e3c5d] flex items-center justify-center text-sm shadow-md overflow-hidden relative">
+            <button id="btn-admin-panel" class="w-9 h-9 rounded-full bg-[#1b2234] border border-[#2e3c5d] flex items-center justify-center text-sm shadow-md overflow-hidden relative" title="Панель адміна">
                 👤
             </button>
         </div>
     </header>
 
-    <!-- ПОЛЕ ПОШУКУ (ПРИХОВАНЕ ЗА ЗАМОВЧУВАННЯМ) -->
+    <!-- ПОЛЕ ПОШУКУ -->
     <div id="search-bar" class="hidden px-4 pt-3">
         <input id="search-input" type="text" placeholder="Пошук товарів..." class="w-full bg-[#151821] border border-[#2563eb] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
     </div>
@@ -146,7 +146,7 @@
     <!-- ==================== ЕКРАН 5: ПОВІДОМЛЕННЯ (ЧАТИ) ==================== -->
     <div id="screen-messages" class="tab-screen hidden p-4">
         <h1 class="text-lg font-bold mb-4">Мої повідомлення 💬</h1>
-        <div id="chats-list" class="space-y-2">
+        <div id="chats-list" class="space-y-3">
             <div class="text-center text-gray-500 py-10 text-xs">Завантаження чатів...</div>
         </div>
     </div>
@@ -183,7 +183,7 @@
         </div>
     </div>
 
-    <!-- ==================== НИЖНЯ НАВІГАЦІЯ (5 КНОПОК) ==================== -->
+    <!-- ==================== НИЖНЯ НАВІГАЦІЯ ==================== -->
     <nav class="fixed bottom-0 left-0 right-0 bg-[#12141d]/95 backdrop-blur-lg border-t border-[#222738] flex justify-around items-center h-[72px] px-2 z-40">
         <button id="nav-main" class="nav-item flex flex-col items-center justify-center w-16 gap-1 text-[#2563eb]">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -216,6 +216,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, off, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // ТВІЙ TELEGRAM USERNAME (БЕЗ @) ДЛЯ ДОСТУПУ ДО АДМІНКИ
+        const ADMIN_USERNAMES = ["hzktoyanoyaetoya"];
+
         const firebaseConfig = {
             apiKey: "AIzaSyB51A5V-mNy4xI_DBOUHnIOa_b2iqAcI10",
             authDomain: "marketplaceua-2af8f.firebaseapp.com",
@@ -232,7 +235,7 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0b0d14'); tg.setBackgroundColor('#0b0d14'); }
 
-        const currentUser = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.id || "Користувач_" + Math.floor(Math.random() * 899 + 100);
+        const currentUser = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.id?.toString() || "User_" + Math.floor(Math.random() * 899 + 100);
 
         let allProducts = {};
         let favorites = JSON.parse(localStorage.getItem('mp_favorites') || '[]');
@@ -265,8 +268,13 @@
         document.getElementById('btn-banner-add').onclick = () => showScreen('screen-add', document.getElementById('nav-add'));
         document.getElementById('btn-logo').onclick = () => showScreen('screen-main', document.getElementById('nav-main'));
 
-        // АДМІН ПАНЕЛЬ (МОДЕРАЦІЯ)
+        // АДМІН ПАНЕЛЬ ПЕРЕВІРКА ПРАВ
         document.getElementById('btn-admin-panel').onclick = () => {
+            const cleanUser = currentUser.toString().replace('@', '');
+            if (!ADMIN_USERNAMES.includes(cleanUser)) {
+                alert('⛔ Доступ обмежено! Ви не є адміністратором цього бота.');
+                return;
+            }
             renderAdminPanel();
             showScreen('screen-admin', null);
         };
@@ -324,10 +332,7 @@
             keys.forEach(key => {
                 const item = allProducts[key];
                 
-                // ГОЛОВНЕ ПРАВИЛО МОДЕРАЦІЇ: показуємо тільки 'approved'
                 if (item.status !== 'approved') return;
-
-                // Фільтр категорії та пошуку
                 if (activeCategory !== 'Всі' && item.category !== activeCategory) return;
                 if (searchQuery && !item.title.toLowerCase().includes(searchQuery)) return;
 
@@ -338,13 +343,9 @@
                     <div class="bg-[#151821] rounded-2xl overflow-hidden border border-[#222738] flex flex-col justify-between shadow-md relative group">
                         <div class="relative h-44 bg-[#1e2330] overflow-hidden">
                             ${item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-3xl">📦</div>`}
-                            
-                            <!-- Значок Категорії -->
                             <span class="absolute bottom-2 left-2 bg-black/60 text-[9px] font-bold text-[#60a5fa] px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm border border-white/10">
                                 ${item.category}
                             </span>
-                            
-                            <!-- Сердечко -->
                             <button id="fav-btn-${key}" class="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/10 hover:scale-110 transition-all">
                                 <svg viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="${isFav ? '#ef4444' : 'currentColor'}" stroke-width="2" class="w-4 h-4"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                             </button>
@@ -496,7 +497,7 @@
                 photo2: uploadedImagesBase64[1] || '',
                 photo3: uploadedImagesBase64[2] || '',
                 seller: currentUser,
-                status: 'pending', // ВІДПРАВЛЯЄМО НА МОДЕРАЦІЮ!
+                status: 'pending',
                 timestamp: Date.now()
             }).then(() => {
                 alert('Дякуємо! Товар відправлено на модерацію адміну.');
@@ -511,16 +512,22 @@
 
         // ЧАТИ ТА ПОВІДОМЛЕННЯ
         function openChat(productKey, productTitle, sellerName) {
-            if (currentUser === sellerName) { alert("Це ваш власна картка товару!"); return; }
+            if (currentUser === sellerName) { alert("Це ваша власна картка товару!"); return; }
 
-            currentChatId = `${currentUser}_${sellerName}_${productKey}`;
+            const chatId = `${currentUser}_${sellerName}_${productKey}`;
+            openChatDirect(chatId, sellerName, productTitle);
+        }
+
+        function openChatDirect(chatId, otherUser, productTitle) {
+            currentChatId = chatId;
             document.getElementById('chat-modal').classList.remove('hidden');
-            document.getElementById('chat-title').innerText = `Продавець: @${sellerName}`;
+            document.getElementById('chat-title').innerText = `@${otherUser}`;
             document.getElementById('chat-product-context').innerText = `Товар: ${productTitle}`;
 
             const container = document.getElementById('chat-messages');
             container.innerHTML = '';
 
+            if (activeChatRef) off(activeChatRef);
             activeChatRef = ref(db, `chats/${currentChatId}`);
             onValue(activeChatRef, (snapshot) => {
                 container.innerHTML = '';
@@ -554,12 +561,14 @@
 
         document.getElementById('btn-close-chat').onclick = () => {
             document.getElementById('chat-modal').classList.add('hidden');
-            if (activeChatRef) off(activeChatRef);
+            if (activeChatRef) { off(activeChatRef); activeChatRef = null; }
         };
 
+        // ВІДОБРАЖЕННЯ СПИСКУ АКТИВНИХ ЧАТІВ З ІМЕНАМИ ТА ТОВАРАМИ
         function loadUserChats() {
             const chatsList = document.getElementById('chats-list');
-            chatsList.innerHTML = '';
+            chatsList.innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">Завантаження...</div>';
+
             onValue(ref(db, 'chats'), (snapshot) => {
                 chatsList.innerHTML = '';
                 const data = snapshot.val();
@@ -567,21 +576,52 @@
                     chatsList.innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">У вас ще немає діалогів. Напишіть продавцю біля будь-якого товару!</div>';
                     return;
                 }
+
                 let count = 0;
                 Object.keys(data).forEach(chatId => {
-                    if (chatId.includes(currentUser)) {
-                        count++;
-                        chatsList.insertAdjacentHTML('beforeend', `
-                            <div class="bg-[#151821] border border-[#222738] p-3 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-[#1e2330]">
-                                <div>
-                                    <h4 class="text-xs font-bold text-white">Діалог #${count}</h4>
-                                    <p class="text-[10px] text-gray-400">Натисніть, щоб відкрити листування</p>
-                                </div>
-                                <span class="text-blue-400 text-xs">Відкрити &rsaquo;</span>
-                            </div>
-                        `);
+                    const parts = chatId.split('_');
+                    if (parts.length >= 3) {
+                        const buyer = parts[0];
+                        const seller = parts[1];
+                        const productKey = parts[2];
+
+                        if (currentUser === buyer || currentUser === seller) {
+                            count++;
+                            const otherUser = (currentUser === buyer) ? seller : buyer;
+                            const product = allProducts[productKey];
+                            const productTitle = product ? product.title : 'Запитуваний товар';
+
+                            const lastMsgObj = data[chatId];
+                            const msgKeys = Object.keys(lastMsgObj);
+                            const lastMsg = msgKeys.length ? lastMsgObj[msgKeys[msgKeys.length - 1]].text : 'Немає повідомлень';
+
+                            const cardId = `chat-card-${count}`;
+                            const chatCardHtml = `
+                                <div id="${cardId}" class="bg-[#151821] border border-[#222738] p-3.5 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-[#1e2330] transition-colors">
+                                    <div class="overflow-hidden mr-2">
+                                        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                                            👤 @${otherUser}
+                                        </h4>
+                                        <p class="text-[11px] text-blue-400 font-medium truncate mt-0.5">📦 ${productTitle}</p>
+                                        <p class="text-[10px] text-gray-400 truncate mt-1">${lastMsg}</p>
+                                    </div>
+                                    <span class="text-blue-500 text-xs font-bold whitespace-nowrap">Відкрити &rsaquo;</span>
+                                </div>`;
+
+                            chatsList.insertAdjacentHTML('beforeend', chatCardHtml);
+
+                            setTimeout(() => {
+                                document.getElementById(cardId)?.addEventListener('click', () => {
+                                    openChatDirect(chatId, otherUser, productTitle);
+                                });
+                            }, 0);
+                        }
                     }
                 });
+
+                if (count === 0) {
+                    chatsList.innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">У вас немає активних діалогів.</div>';
+                }
             });
         }
     </script>
