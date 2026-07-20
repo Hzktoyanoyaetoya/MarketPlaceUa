@@ -156,6 +156,14 @@
         let currentChatId = null;
         let activeChatRef = null;
 
+        // Екранування тексту перед вставкою в HTML — захист від XSS
+        // (title, category, price, текст чату можуть містити будь-що, що ввів користувач)
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str ?? '';
+            return div.innerHTML;
+        }
+
         // ПРИВ'ЯЗКА ПОДІЙ ДО КНОПОК
         document.getElementById('tab-main').onclick = () => switchTab('main-screen', document.getElementById('tab-main'));
         document.getElementById('tab-add').onclick = () => switchTab('add-screen', document.getElementById('tab-add'));
@@ -214,19 +222,18 @@
 
                 Object.keys(data).reverse().forEach(key => {
                     const item = data[key];
-                    if (item.status !== 'approved') return;
-                    
-                    // ТИМЧАСОВО: Показуємо всі товари ('pending' і 'approved'), щоб ви відразу бачили результат без модерації!
+                    if (item.status !== 'approved') return; // товари публікуються як approved одразу (див. submitProduct)
+
                     const img = item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-gray-600">📦</div>`;
                     
                     const cardId = `btn-chat-trigger-${key}`;
                     const card = `
                         <div class="bg-[#161616] rounded-[20px] overflow-hidden flex flex-col border border-[#222]">
-                            <div class="relative h-40 bg-[#1a1a1a]">${img}<span class="absolute bottom-2 left-2 text-[8px] bg-black/60 text-[#64b5f6] px-2 py-1 rounded-lg uppercase font-bold">${item.category}</span></div>
+                            <div class="relative h-40 bg-[#1a1a1a]">${img}<span class="absolute bottom-2 left-2 text-[8px] bg-black/60 text-[#64b5f6] px-2 py-1 rounded-lg uppercase font-bold">${escapeHtml(item.category)}</span></div>
                             <div class="p-3 flex flex-col flex-grow justify-between">
-                                <h3 class="text-sm font-medium text-gray-200 line-clamp-2 leading-tight">${item.title}</h3>
+                                <h3 class="text-sm font-medium text-gray-200 line-clamp-2 leading-tight">${escapeHtml(item.title)}</h3>
                                 <div class="flex justify-between items-end mt-3">
-                                    <span class="font-bold text-white text-sm">${item.price} ₴</span>
+                                    <span class="font-bold text-white text-sm">${escapeHtml(String(item.price))} ₴</span>
                                     <button id="${cardId}" class="p-2 bg-[#222] rounded-xl text-white hover:bg-[#333]">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                                     </button>
@@ -255,7 +262,7 @@
                 photo2: uploadedImagesBase64[1] || '',
                 photo3: uploadedImagesBase64[2] || '',
                 seller: currentUser,
-                status: 'pending', // Ставимо відразу approved для тестів
+                status: 'approved', // Публікуємо одразу без модерації (MVP). Для модерації: постав 'pending' і зроби адмін-екран/консоль Firebase для схвалення
                 timestamp: Date.now()
             }).then(() => {
                 alert('Товар успішно додано!');
@@ -289,8 +296,8 @@
                         const msg = data[k];
                         const isMe = msg.sender === currentUser;
                         const msgHtml = isMe 
-                            ? `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${msg.text}</p></div>`
-                            : `<div class="bg-[#222] text-gray-200 py-2 px-4 rounded-2xl rounded-tl-sm max-w-[75%] self-start shadow-md"><p class="text-sm">${msg.text}</p></div>`;
+                            ? `<div class="bg-[#2962ff] text-white py-2 px-4 rounded-2xl rounded-tr-sm max-w-[75%] self-end shadow-md"><p class="text-sm">${escapeHtml(msg.text)}</p></div>`
+                            : `<div class="bg-[#222] text-gray-200 py-2 px-4 rounded-2xl rounded-tl-sm max-w-[75%] self-start shadow-md"><p class="text-sm">${escapeHtml(msg.text)}</p></div>`;
                         container.insertAdjacentHTML('beforeend', msgHtml);
                     });
                     container.scrollTop = container.scrollHeight;
