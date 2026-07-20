@@ -216,8 +216,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, off, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // ТВІЙ TELEGRAM USERNAME (БЕЗ @) ДЛЯ ДОСТУПУ ДО АДМІНКИ
-        const ADMIN_USERNAMES = ["hzktoyanoyaetoya"];
+        // ==================== НАЛАШТУВАННЯ БОТА ТА АДМІНА ====================
+        const BOT_TOKEN = "8884572139:AAGsO_k97c2oggnQypjCjX9P80nXmauFdac"; // 👈 Вставий сюди токен свого бота від BotFather
+        const ADMIN_CHAT_ID = "1932772616"; // Твій Telegram ID зі скріншоту
+        const ADMIN_USERNAMES = ["Sevenny"]; // Твій никнейм про всяк випадок
 
         const firebaseConfig = {
             apiKey: "AIzaSyB51A5V-mNy4xI_DBOUHnIOa_b2iqAcI10",
@@ -235,7 +237,8 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0b0d14'); tg.setBackgroundColor('#0b0d14'); }
 
-        const currentUser = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.id?.toString() || "User_" + Math.floor(Math.random() * 899 + 100);
+        const currentUserId = tg?.initDataUnsafe?.user?.id?.toString() || "";
+        const currentUser = tg?.initDataUnsafe?.user?.username || currentUserId || "User_" + Math.floor(Math.random() * 899 + 100);
 
         let allProducts = {};
         let favorites = JSON.parse(localStorage.getItem('mp_favorites') || '[]');
@@ -271,7 +274,10 @@
         // АДМІН ПАНЕЛЬ ПЕРЕВІРКА ПРАВ
         document.getElementById('btn-admin-panel').onclick = () => {
             const cleanUser = currentUser.toString().replace('@', '');
-            if (!ADMIN_USERNAMES.includes(cleanUser)) {
+            const isIdAdmin = (currentUserId === ADMIN_CHAT_ID);
+            const isNameAdmin = ADMIN_USERNAMES.includes(cleanUser);
+
+            if (!isIdAdmin && !isNameAdmin) {
                 alert('⛔ Доступ обмежено! Ви не є адміністратором цього бота.');
                 return;
             }
@@ -319,7 +325,7 @@
             renderAdminPanel();
         });
 
-        // ВІДОБРАЖЕННЯ КАРТОК (ПОПУЛЯРНЕ ТА НОВІ)
+        // ВІДОБРАЖЕННЯ КАРТОК
         function renderProducts() {
             const popGrid = document.getElementById('popular-grid');
             const newGrid = document.getElementById('new-grid');
@@ -413,7 +419,7 @@
             });
         }
 
-        // РЕАЛІЗАЦІЯ МОДЕРАЦІЇ (АДМІН-ПАНЕЛЬ)
+        // РЕАЛІЗАЦІЯ МОДЕРАЦІЇ В ВСЕРЕДИНІ ДОДАТКУ
         function renderAdminPanel() {
             const container = document.getElementById('admin-pending-grid');
             container.innerHTML = '';
@@ -458,7 +464,7 @@
             }
         }
 
-        // ДОДАВАННЯ ТОВАРУ
+        // ДОДАВАННЯ ТОВАРУ ТА ВІДПРАВКА В ТЕЛЕГРАМ ЧАТ
         document.getElementById('form-photos').onchange = (e) => {
             const files = Array.from(e.target.files);
             if (uploadedImagesBase64.length + files.length > 3) { alert("Максимум 3 фото!"); return; }
@@ -491,7 +497,8 @@
 
             if (!title || !price || !description) { alert('Заповніть всі поля!'); return; }
 
-            push(ref(db, 'products'), {
+            // 1. Публікуємо товар у базу Firebase
+            const newProdRef = push(ref(db, 'products'), {
                 title, price, category, description,
                 photo1: uploadedImagesBase64[0] || '',
                 photo2: uploadedImagesBase64[1] || '',
@@ -499,15 +506,46 @@
                 seller: currentUser,
                 status: 'pending',
                 timestamp: Date.now()
-            }).then(() => {
-                alert('Дякуємо! Товар відправлено на модерацію адміну.');
-                document.getElementById('form-title').value = '';
-                document.getElementById('form-price').value = '';
-                document.getElementById('form-description').value = '';
-                uploadedImagesBase64 = [];
-                renderPreviews();
-                showScreen('screen-main', document.getElementById('nav-main'));
             });
+
+            const productId = newProdRef.key;
+
+            // 2. ВІДПРАВЛЯЄМО СПОВІЩЕННЯ В ОСОБИСТІ ПОВІДОМЛЕННЯ АДМІНУ (ТЕЛЕГРАМ)
+            if (BOT_TOKEN && BOT_TOKEN !== "ТВІЙ_ТОКЕН_ВІД_BOTFATHER") {
+                const msgText = `🆕 <b>Нове оголошення на модерацію!</b>\n\n` +
+                                `📌 <b>Назва:</b> ${title}\n` +
+                                `💰 <b>Ціна:</b> ${price} ₴\n` +
+                                `🏷 <b>Категорія:</b> ${category}\n` +
+                                `👤 <b>Продавець:</b> @${currentUser}\n` +
+                                `📝 <b>Опис:</b> ${description}\n\n` +
+                                `🆔 ID: <code>${productId}</code>`;
+
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: ADMIN_CHAT_ID,
+                        text: msgText,
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    { text: '✅ Схвалити', callback_data: `approve_${productId}` },
+                                    { text: '❌ Відхилити', callback_data: `reject_${productId}` }
+                                ]
+                            ]
+                        }
+                    })
+                }).catch(err => console.error("Помилка відправки бота:", err));
+            }
+
+            alert('Дякуємо! Товар відправлено на модерацію адміну.');
+            document.getElementById('form-title').value = '';
+            document.getElementById('form-price').value = '';
+            document.getElementById('form-description').value = '';
+            uploadedImagesBase64 = [];
+            renderPreviews();
+            showScreen('screen-main', document.getElementById('nav-main'));
         };
 
         // ЧАТИ ТА ПОВІДОМЛЕННЯ
