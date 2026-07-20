@@ -21,7 +21,7 @@
         </div>
     </header>
 
-    <!-- ==================== ЕКРАН 1: ГОЛОВНА ==================== -->
+    <!-- ЕКРАН 1: ГОЛОВНА -->
     <div id="screen-main" class="tab-screen block">
         <div class="px-4 mt-4">
             <h2 class="text-base font-bold text-white tracking-wide mb-3">Схвалені оголошення</h2>
@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <!-- ==================== ЕКРАН 2: ДОДАТИ ТОВАР ==================== -->
+    <!-- ЕКРАН 2: ДОДАТИ ТОВАР -->
     <div id="screen-add" class="tab-screen hidden p-4 max-w-md mx-auto">
         <h1 class="text-lg font-bold text-center mb-4">Нове оголошення</h1>
         <div class="space-y-4">
@@ -47,7 +47,7 @@
             <textarea id="form-description" rows="4" placeholder="Опис товару..." class="w-full bg-[#151821] border border-[#222738] rounded-xl px-4 py-3 text-sm text-white focus:outline-none resize-none"></textarea>
             
             <button id="btn-submit" class="w-full bg-[#2563eb] hover:bg-blue-600 py-3.5 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-transform">
-                Надіслати на модерацію
+                Опублікувати
             </button>
         </div>
     </div>
@@ -69,12 +69,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // //////////////////////////////////////////////////
-        // ВСТАВИ СВІЙ ТОКЕН НИЖЧЕ Замість ТЕКСТУ:
-        // //////////////////////////////////////////////////
-        const BOT_TOKEN = "8884572139:AAGsO_k97c2oggnQypjCjX9P80nXmauFdac"; 
-        const ADMIN_CHAT_ID = "1932772616"; 
-
         const firebaseConfig = {
             databaseURL: "https://marketplaceua-2af8f-default-rtdb.europe-west1.firebasedatabase.app"
         };
@@ -88,31 +82,30 @@
         const currentUser = tg?.initDataUnsafe?.user?.username || "User_" + Math.floor(Math.random() * 899 + 100);
         let photoBase64 = "";
 
-        // Навігація між вкладками
+        // Навігація
         document.getElementById('nav-main').addEventListener('click', () => {
             document.getElementById('screen-main').classList.remove('hidden');
             document.getElementById('screen-add').classList.add('hidden');
         });
 
+        document.getElementById('nav-[#nav-add]').onclick = () => {};
         document.getElementById('nav-add').addEventListener('click', () => {
             document.getElementById('screen-add').classList.remove('hidden');
             document.getElementById('screen-main').classList.add('hidden');
         });
 
-        // Обробка фото
+        // Фото
         document.getElementById('form-photos').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = (ev) => {
-                    photoBase64 = ev.target.result;
-                };
+                reader.onload = (ev) => { photoBase64 = ev.target.result; };
             }
         });
 
-        // Натискання кнопки "Опублікувати"
-        document.getElementById('btn-submit').addEventListener('click', async () => {
+        // Додавання у Firebase
+        document.getElementById('btn-submit').addEventListener('click', () => {
             const title = document.getElementById('form-title').value.trim();
             const price = document.getElementById('form-price').value.trim();
             const description = document.getElementById('form-description').value.trim();
@@ -122,62 +115,30 @@
                 return; 
             }
 
-            try {
-                // 1. Запис у Firebase
-                const newProdRef = push(ref(db, 'products'), {
-                    title: title,
-                    price: price,
-                    description: description,
-                    photo: photoBase64,
-                    seller: currentUser,
-                    status: 'pending',
-                    timestamp: Date.now()
-                });
-
-                const productId = newProdRef.key;
-
-                // 2. Відправка повідомлення в Telegram
-                const msgText = `<b>🆕 Нове оголошення на модерацію!</b>\n\n` +
-                                `<b>Назва:</b> ${title}\n` +
-                                `<b>Ціна:</b> ${price} грн\n` +
-                                `<b>Продавець:</b> @${currentUser}\n` +
-                                `<b>Опис:</b> ${description || 'Без опису'}`;
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: ADMIN_CHAT_ID,
-                        text: msgText,
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    { text: '✅ Схвалити', callback_data: `approve_${productId}` },
-                                    { text: '❌ Відхилити', callback_data: `reject_${productId}` }
-                                ]
-                            ]
-                        }
-                    })
-                });
-
+            push(ref(db, 'products'), {
+                title: title,
+                price: price,
+                description: description,
+                photo: photoBase64,
+                seller: currentUser,
+                status: 'pending',
+                timestamp: Date.now()
+            }).then(() => {
                 alert('Оголошення відправлено на модерацію!');
                 
-                // Очищаємо форму
                 document.getElementById('form-title').value = '';
                 document.getElementById('form-price').value = '';
                 document.getElementById('form-description').value = '';
+                photoBase64 = "";
                 
-                // Повертаємо на головну
                 document.getElementById('nav-main').click();
-
-            } catch (err) {
+            }).catch(err => {
+                alert('Помилка збереження!');
                 console.error(err);
-                alert('Сталася помилка при збереженні!');
-            }
+            });
         });
 
-        // Виведення схвалених товарів
+        // Відображення схвалених оголошень
         onValue(ref(db, 'products'), (snapshot) => {
             const grid = document.getElementById('new-grid');
             grid.innerHTML = '';
