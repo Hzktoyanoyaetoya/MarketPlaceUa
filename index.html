@@ -2,136 +2,223 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MarketPlaceUA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 15px; background: #f4f4f9; color: #333; }
-        .form-card, .product-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input, textarea, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #0088cc; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #006699; }
-        .products-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-        .price { color: #2e7d32; font-weight: bold; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body>
+<body class="bg-[#0b0d14] text-white font-sans antialiased pb-28 selection:bg-blue-500/30">
 
-    <h2>📦 Додати оголошення</h2>
-    <div class="form-card">
-        <input type="text" id="title" placeholder="Назва товару" required>
-        <input type="number" id="price" placeholder="Ціна (грн)" required>
-        <textarea id="description" placeholder="Опис товару..."></textarea>
-        <button onclick="publishProduct()">Опублікувати</button>
+    <!-- ВЕРХНЯ ШАПКА -->
+    <header class="flex justify-between items-center px-4 py-3 sticky top-0 bg-[#0b0d14]/90 backdrop-blur-md z-40 border-b border-[#1b1f2e]">
+        <div class="text-xl font-black tracking-tight cursor-pointer" id="btn-logo">
+            MarketPlace<span class="text-[#2563eb]">U</span><span class="text-[#eab308]">A</span>
+        </div>
+        <div class="flex gap-3 items-center">
+            <button id="btn-toggle-search" class="p-2 rounded-full bg-[#151821] text-gray-300 hover:text-white border border-[#222738]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+            </button>
+            <button id="btn-notifications" class="p-2 rounded-full bg-[#151821] text-gray-300 hover:text-white border border-[#222738] relative">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ПОЛЕ ПОШУКУ -->
+    <div id="search-bar" class="hidden px-4 pt-3">
+        <input id="search-input" type="text" placeholder="Пошук товарів..." class="w-full bg-[#151821] border border-[#2563eb] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
     </div>
 
-    <h2>🛒 Схвалені товари</h2>
-    <div id="products-container" class="products-list">
-        <!-- Сюди виводитимуться тільки схвалені товари -->
+    <!-- ==================== ЕКРАН 1: ГОЛОВНА ==================== -->
+    <div id="screen-main" class="tab-screen block">
+        <div class="flex gap-2.5 overflow-x-auto px-4 py-3 scrollbar-hide" id="category-chips">
+            <button data-cat="Всі" class="cat-btn px-4 py-2 rounded-xl bg-[#1e293b] text-[#60a5fa] border border-[#3b82f6] text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 shadow-sm">
+                <span>🔲</span> Всі категорії
+            </button>
+            <button data-cat="Одяг" class="cat-btn px-4 py-2 rounded-xl bg-[#151821] text-gray-400 border border-[#222738] text-xs font-medium whitespace-nowrap">👕 Одяг</button>
+            <button data-cat="Взуття" class="cat-btn px-4 py-2 rounded-xl bg-[#151821] text-gray-400 border border-[#222738] text-xs font-medium whitespace-nowrap">👟 Взуття</button>
+            <button data-cat="Аксесуари" class="cat-btn px-4 py-2 rounded-xl bg-[#151821] text-gray-400 border border-[#222738] text-xs font-medium whitespace-nowrap">🎒 Аксесуари</button>
+            <button data-cat="Техніка" class="cat-btn px-4 py-2 rounded-xl bg-[#151821] text-gray-400 border border-[#222738] text-xs font-medium whitespace-nowrap">📱 Техніка</button>
+        </div>
+
+        <div class="px-4 mt-4">
+            <h2 class="text-base font-bold text-white tracking-wide mb-3">Нові оголошення</h2>
+            <div class="grid grid-cols-2 gap-3" id="new-grid">
+                <div class="col-span-2 text-center text-gray-500 py-6 text-xs">Завантаження...</div>
+            </div>
+        </div>
     </div>
 
-    <!-- Firebase SDK (Compat версія для зручності) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- ==================== ЕКРАН 2: ДОДАТИ ТОВАР ==================== -->
+    <div id="screen-add" class="tab-screen hidden p-4 max-w-md mx-auto">
+        <h1 class="text-lg font-bold text-center mb-4">Нове оголошення</h1>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs text-gray-400 mb-2">Фото товару (до 3-х)</label>
+                <div class="flex items-center gap-3 flex-wrap" id="photo-uploader-container">
+                    <label id="upload-btn" class="w-20 h-20 bg-[#151821] border border-dashed border-[#222738] rounded-2xl flex items-center justify-center cursor-pointer">
+                        <span class="text-2xl text-gray-500">+</span>
+                        <input id="form-photos" type="file" accept="image/*" multiple class="hidden">
+                    </label>
+                </div>
+            </div>
+            <input id="form-title" type="text" placeholder="Назва товару" class="w-full bg-[#151821] border border-[#222738] rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+            <div class="grid grid-cols-2 gap-3">
+                <input id="form-price" type="number" placeholder="Ціна (₴)" class="w-full bg-[#151821] border border-[#222738] rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+                <select id="form-category" class="w-full bg-[#151821] border border-[#222738] rounded-xl px-3 py-3 text-sm text-gray-300 focus:outline-none">
+                    <option value="Одяг">👕 Одяг</option>
+                    <option value="Взуття">👟 Взуття</option>
+                    <option value="Аксесуари">🎒 Аксесуари</option>
+                    <option value="Техніка">📱 Техніка</option>
+                </select>
+            </div>
+            <textarea id="form-description" rows="4" placeholder="Опис товару..." class="w-full bg-[#151821] border border-[#222738] rounded-xl px-4 py-3 text-sm text-white focus:outline-none resize-none"></textarea>
+            <button id="btn-submit" class="w-full bg-[#2563eb] hover:bg-blue-600 py-3.5 rounded-xl font-bold text-sm shadow-lg">Надіслати на модерацію</button>
+        </div>
+    </div>
 
-    <script>
-        // -------------------------------------------------------------
-        # НАЛАШТУВАННЯ (ЗАМІНИ НА СВОЇ ДАНІ)
-        // -------------------------------------------------------------
-        const BOT_TOKEN = "ТВІЙ_ТОКЕН_ВІД_BOTFATHER";
-        const ADMIN_CHAT_ID = "ТВІЙ_CHAT_ID_З_USERINFOBOT"; // число, напр. 123456789
+    <!-- НИЖНЯ НАВІГАЦІЯ -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#12141d]/95 backdrop-blur-lg border-t border-[#222738] flex justify-around items-center h-[72px] px-2 z-40">
+        <button id="nav-main" class="nav-item flex flex-col items-center justify-center w-16 gap-1 text-[#2563eb]">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span class="text-[10px] font-medium">Головна</span>
+        </button>
+        
+        <button id="nav-add" class="nav-item flex flex-col items-center justify-center w-16 relative">
+            <div class="w-12 h-12 bg-[#2563eb] rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-600/40 -mt-5 border-2 border-[#0b0d14]">+</div>
+            <span class="text-[10px] font-medium text-gray-400 mt-0.5">Додати</span>
+        </button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ⚠️ ОДОВ’ЯЗКОВО ВСТАВИ СВІЙ ТОКЕН НИЖЧЕ:
+        const BOT_TOKEN = "СВІЙ_ТОКЕН_ВІД_BOTFATHER"; 
+        const ADMIN_CHAT_ID = "1932772616"; 
 
         const firebaseConfig = {
             databaseURL: "https://marketplaceua-2af8f-default-rtdb.europe-west1.firebasedatabase.app"
         };
-        // -------------------------------------------------------------
 
-        // Ініціалізація Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        // 1. Відправка повідомлення модератору в Telegram
-        async function sendToModerationBot(productId, productData) {
-            const text = `<b>🆕 Нове оголошення на модерацію!</b>\n\n` +
-                         `<b>Назва:</b> ${productData.title}\n` +
-                         `<b>Ціна:</b> ${productData.price} грн\n` +
-                         `<b>Опис:</b> ${productData.description || 'Без опису'}`;
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
 
-            const keyboard = {
-                inline_keyboard: [
-                    [
-                        { text: "✅ Схвалити", callback_data: `approve_${productId}` },
-                        { text: "❌ Відхилити", callback_data: `reject_${productId}` }
-                    ]
-                ]
-            };
+        const currentUser = tg?.initDataUnsafe?.user?.username || "User_" + Math.floor(Math.random() * 899 + 100);
+        let uploadedImagesBase64 = [];
 
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_CHAT_ID,
-                    text: text,
-                    parse_mode: 'HTML',
-                    reply_markup: keyboard
-                })
-            });
+        // Перемикання екранів
+        function showScreen(screenId) {
+            document.querySelectorAll('.tab-screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // 2. Публікація нового товару
-        function publishProduct() {
-            const title = document.getElementById('title').value;
-            const price = document.getElementById('price').value;
-            const description = document.getElementById('description').value;
+        document.getElementById('nav-main').onclick = () => showScreen('screen-main');
+        document.getElementById('nav-add').onclick = () => showScreen('screen-add');
 
-            if (!title || !price) {
-                alert("Заповніть назву та ціну!");
-                return;
+        // Завантаження фото
+        document.getElementById('form-photos').onchange = (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (ev) => {
+                    uploadedImagesBase64.push(ev.target.result);
+                };
+            });
+            alert('Фото завантажено!');
+        };
+
+        // Публікація товару + сповіщення бота
+        document.getElementById('btn-submit').onclick = async () => {
+            const title = document.getElementById('form-title').value.trim();
+            const price = document.getElementById('form-price').value.trim();
+            const category = document.getElementById('form-category').value;
+            const description = document.getElementById('form-description').value.trim();
+
+            if (!title || !price) { alert('Заповніть назву та ціну!'); return; }
+
+            // 1. Зберігаємо у Firebase
+            const newProdRef = push(ref(db, 'products'), {
+                title, price, category, description,
+                photo1: uploadedImagesBase64[0] || '',
+                seller: currentUser,
+                status: 'pending',
+                timestamp: Date.now()
+            });
+
+            const productId = newProdRef.key;
+
+            // 2. Надсилаємо сповіщення боту у Telegram
+            const msgText = `🆕 <b>Нове оголошення на модерацію!</b>\n\n` +
+                            `📌 <b>Назва:</b> ${title}\n` +
+                            `💰 <b>Ціна:</b> ${price} ₴\n` +
+                            `👤 <b>Продавець:</b> @${currentUser}\n` +
+                            `📝 <b>Опис:</b> ${description}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: ADMIN_CHAT_ID,
+                        text: msgText,
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    { text: '✅ Схвалити', callback_data: `approve_${productId}` },
+                                    { text: '❌ Відхилити', callback_data: `reject_${productId}` }
+                                ]
+                            ]
+                        }
+                    })
+                });
+                alert('Успішно відправлено на модерацію у Telegram!');
+            } catch (err) {
+                console.error("Помилка відправки:", err);
+                alert("Помилка надсилання сповіщення в Telegram!");
             }
 
-            const newProductRef = db.ref('products').push();
-            const productId = newProductRef.key;
+            showScreen('screen-main');
+        };
 
-            const productData = {
-                title: title,
-                price: price,
-                description: description,
-                status: 'pending', // Статус за замовчуванням
-                createdAt: Date.now()
-            };
+        // Відображення тільки СХВАЛЕНИХ товарів
+        onValue(ref(db, 'products'), (snapshot) => {
+            const grid = document.getElementById('new-grid');
+            grid.innerHTML = '';
+            const data = snapshot.val() || {};
 
-            // Зберігаємо в Firebase та надсилаємо модератору
-            newProductRef.set(productData).then(() => {
-                sendToModerationBot(productId, productData);
-                alert("Оголошення відправлено на модерацію!");
-                
-                // Очищаємо форму
-                document.getElementById('title').value = '';
-                document.getElementById('price').value = '';
-                document.getElementById('description').value = '';
-            });
-        }
-
-        // 3. Завантаження тільки СХВАЛЕНИХ товарів на сайт
-        db.ref('products').on('value', (snapshot) => {
-            const container = document.getElementById('products-container');
-            container.innerHTML = '';
-            
-            snapshot.forEach((childSnapshot) => {
-                const product = childSnapshot.val();
-                
-                // Показуємо тільки якщо статус 'approved'
-                if (product.status === 'approved') {
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
-                    card.innerHTML = `
-                        <h3>${product.title}</h3>
-                        <p class="price">${product.price} грн</p>
-                        <p>${product.description || ''}</p>
-                    `;
-                    container.appendChild(card);
+            let count = 0;
+            Object.keys(data).reverse().forEach(key => {
+                const item = data[key];
+                if (item.status === 'approved') {
+                    count++;
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div class="bg-[#151821] rounded-2xl p-3 border border-[#222738]">
+                            <div class="h-32 bg-[#1e2330] rounded-xl overflow-hidden mb-2">
+                                ${item.photo1 ? `<img src="${item.photo1}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-2xl">📦</div>`}
+                            </div>
+                            <h3 class="text-xs font-bold">${item.title}</h3>
+                            <p class="text-sm font-bold text-blue-400 mt-1">${item.price} ₴</p>
+                        </div>
+                    `);
                 }
             });
+
+            if (count === 0) {
+                grid.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-6 text-xs">Немає схвалених оголошень. Схваліть тестове у чаті з ботом!</div>';
+            }
         });
     </script>
 </body>
